@@ -1,0 +1,9 @@
+<?xml version='1.0' standalone='yes'?>
+<application>
+  <name>SAG</name>
+  <siblings>
+    <sibling>PDS</sibling>
+  </siblings>
+  <components>
+  </components>
+</application>
