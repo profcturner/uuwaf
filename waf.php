@@ -174,6 +174,10 @@ class waf extends smarty
     // Is all this in the session already?
     if(isset($_SESSION['WAF']))
     {
+      if(WAF_INIT_DEBUG)
+      {
+        echo "WAF: framework is serialised from a previous load\n";
+      }
       $this->applications = unserialize($_SESSION['WAF']['applications']);
       $this->components = unserialise($_SESSION['WAF']['components']);
       /** @todo add reg_exp in here... */
@@ -188,6 +192,7 @@ class waf extends smarty
     $this->environment_sanity_check();
 
     $this->applications = array();
+    $this->components = array();
     // First load details for this application and store
     $core_application = $this->get_application($application_name);
     array_push($this->applications, $core_application);
@@ -213,13 +218,13 @@ class waf extends smarty
         /** @todo firm regexp needed here */
         $component = $this->get_component($component_name);
         array_push($this->components, $component);
-        require_once("waf_core/components/$component_name.php");
+        require_once("core/components/$component_name.php");
     }
     
     // Put this all in the session for next time.
     $_SESSION['WAF'] = array();
     $_SESSION['WAF']['applications'] = serialize($this->applications);
-    $_SESSION['WAF']['components'] = serialize($this->applications);
+    $_SESSION['WAF']['components'] = serialize($this->components);
   }
 
   /** Checks the system requirements are correct for WAF applications
