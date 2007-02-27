@@ -11,6 +11,7 @@
 * @license http://opensource.org/licenses/gpl-license.php GNU Public License v2
 * @version 0.1
 * @package WAF
+*
 */
 require_once('smarty/libs/Smarty.class.php');
 
