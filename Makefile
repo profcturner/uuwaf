@@ -43,24 +43,14 @@ debwww=/var/www
 
 debs: deb-uuwaf
 
-deb-uuwaf: deb-uuwaf-etc
+deb-uuwaf:
 	# Make main directory and copy in contents
 	mkdir -p ${debprefix}/share/uuwaf
 	cp -rf html ${debprefix}/share/uuwaf
 	cp -rf include ${debprefix}/share/uuwaf
-	cp -rf cron ${debprefix}/share/uuwaf
-	cp -rf templates ${debprefix}/share/uuwaf
-	mkdir ${debprefix}/share/uuwaf/templates_c
-	mkdir ${debprefix}/share/uuwaf/templates_cache
 	chown -R www-data:root ${debprefix}/share/uuwaf/
 	chmod -R o-rwx ${debprefix}/share/uuwaf/
-	# Nuke license file for xinha, it is contained in debian/copyright
-	# and disturbs lintian
-	rm ${debprefix}/share/uuwaf/html/jsincludes/htmlarea/license.txt
-	# Make documentation directory
 	mkdir -p ${debprefix}/share/doc/uuwaf
-	cp -rf sql_patch ${debprefix}/share/doc/uuwaf
-
 
 deb-uuwaf-etc: 
 	mkdir -p ${debetc}/uuwaf
