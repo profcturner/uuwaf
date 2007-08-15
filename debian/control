@@ -1,0 +1,12 @@
+Source: uuwaf
+Section: web
+Priority: extra
+Maintainer: Colin Turner <c.turner@ulster.ac.uk>
+Build-Depends: debhelper (>= 5)
+Standards-Version: 3.7.2
+
+Package: uuwaf
+Architecture: all
+Depends: apache2, php5, php5-cli, libapache2-mod-php5, php5-mysql, smarty, php-pear, debconf, mysql-client, mysql-server
+Description: University of Ulster Web Application Framework
+ This is a PHP framework for simplifying the creation of web applications.

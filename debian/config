@@ -1,0 +1,16 @@
+#!/bin/sh -e
+# Attempt at debconf for UUWAF
+
+# Source debconf library.
+. /usr/share/debconf/confmodule
+
+# Ask for the cookie value
+db_input low uuwaf/cookie_secret || true
+
+db_get uuwaf/cookie_secret
+if [ "$RET" = "" ]
+then
+  # TODO if empty, generate a value
+fi
+
+db_go

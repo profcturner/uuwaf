@@ -1,0 +1,10 @@
+Template: opus/cookie_secret
+Type: string
+Default:
+Description: the secret used to generate UUWAF cookies:
+ This is a secret used to generate cookies. You can normally
+ leave this blank and an automatic value will be calculated.
+ However, if you need to run applications on two different
+ machines with separate installations of UUWAF you will
+ need the values to match for this applications to talk
+ to each other correctly.
