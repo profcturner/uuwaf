@@ -13,6 +13,7 @@
 * @todo Add hooks for Cache
 * @todo Much consolidation is possible here
 * @todo Possibily unsetting the connection is dumb...
+* @todo Static _con?
 *
 */
 
@@ -52,6 +53,12 @@ class DTO
       $logs['panic']->log("Database connection failure ($error_text)", PEAR_LOG_EMERG);
       WA::halt($e->getMessage);
     }
+  }
+
+
+  function __destruct()
+  {
+    unset($_con);
   }
 
 
@@ -172,7 +179,6 @@ class DTO
     {
       $this->_log_sql_error($e, $class, "_load_by_id()");
     }
-    unset($con);
   }
 
   /**
@@ -201,7 +207,6 @@ class DTO
     {
       $this->_log_sql_error($e, $class, "_load_by_field()");
     }
-    unset($con);
   }
 
 
@@ -231,7 +236,6 @@ class DTO
     {
       $this->_log_sql_error($e, $class, "_load_by_field_value()");
     }
-    unset($con);
   }
 
   /**
@@ -264,7 +268,6 @@ class DTO
     {
       $this->_log_sql_error($e, $class, "_load_where()");
     }
-    unset($con);
   }
 
 
@@ -319,7 +322,6 @@ class DTO
     {
       $this->_log_sql_error($e, $class, "_insert()");
     }
-    unset($con);
     return $this->id;
   }
 
@@ -378,7 +380,6 @@ class DTO
     {
       $this->_log_sql_error($e, $class, "_update()");
     }
-    unset($con);
   }
 
 
@@ -605,7 +606,6 @@ class DTO
     {
       $this->_log_sql_error($e, $class, "_remove_where()");
     }
-    unset($con);
   }
 
   /**
