@@ -15,7 +15,7 @@
 */
 
 // Internal includes
-require_once("WA.Utility.class.php");
+//require_once("WA.Utility.class.php");
 require_once("WA.data_connection.class.php");
 
 // 3rd Party includes
@@ -64,7 +64,7 @@ class WA extends Smarty
 
     // Defaults for empty values
     if(empty($this->compile_check)) $this->compile_check = True;
-    if(empry($this->caching)) $this->caching = False;
+    if(empty($this->caching)) $this->caching = False;
     if(empty($this->debugging)) $this->debugging = False;
     if(empty($this->title)) $this->title = "WA_title";
     if(empty($this->language)) $this->language = "en";
@@ -107,7 +107,7 @@ class WA extends Smarty
     }
     if(get_magic_quotes_gpc())
     {
-      $this->halt("WAF: Requires magic quotes on for GPC");
+      $this->halt("WAF: Requires magic quotes off for GPC");
     }
     if(WAF_INIT_DEBUG)
     {
@@ -219,6 +219,7 @@ class WA extends Smarty
   *
   * @param string the directory containing authentication files
   * @return the number of objects added, or -1 if nothing was done
+  * @todo regular expression matching on filenames might be worthwhile
   */
   function register_authentication_directory($directory)
   {
@@ -237,11 +238,12 @@ class WA extends Smarty
       $this->log("Loading $filename", PEAR_LOG_DEBUG, "debug");
       require_once($directory . "/" . $filename);
 
+
       // Register the object
       $name = explode("_", $file->getFilename());
       $name = explode(".", $name[1]);
 
-      $object = new $name;
+      $object = new $name[0];
       $this->register_authentication_object($object);
       $objects_added++;
     }
