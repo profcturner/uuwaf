@@ -9,33 +9,292 @@
 * @author Colin Turner <c.turner@ulster.ac.uk>
 * @author Gordon Crawford <g.crawford@ulster.ac.uk>
 * @license http://opensource.org/licenses/gpl-license.php GNU Public License v2
-* @version 0.1
+* @version 1.0
 * @package WAF
 *
 */
 
+// Internal includes
 require_once("WA.Utility.class.php");
+require_once("WA.data_connection.class.php");
+
+// 3rd Party includes
 require_once("Smarty.class.php");
 
 // The Web Application Framework uses logging that is global in scope (at least for now)
+require_once('Log.php');
 
 class WA extends Smarty 
 {
-	function WA($templates_dir, $templates_c_dir, $config_dir, $cache_dir, $compile_check=True, $caching=False, $debugging=False, $title = "WA_title", $language="en") 
+
+  /** An array of authentication objects
+  * @var array
+  */
+  var $authentication_objects;
+
+  /** An array of log objects
+  * @var array
+  */
+  var $logs;
+
+  /** The WAF user object for the logged in user
+  * @var array
+  */
+  var $user;
+
+  function __construct($config)
   {
-	  session_start();
-	  $this->Smarty();
-	  $this->template_dir = $templates_dir;
-	  $this->compile_dir = $templates_c_dir;
-	  $this->config_dir = $config_dir;
-	  $this->cache_dir = $cache_dir;
-    $this->compile_check = $compile_check;
-    $this->debugging = $debugging;
-	  $this->caching = $caching;
-    $this->title = $title;
+    session_start();
+    $this->Smarty();
+
+    // Material loaded from config
+    $this->template_dir    = $config['templates_dir'];
+    $this->compile_dir      = $config['templates_c_dir'];
+    $this->config_dir         = $config['config_dir'];
+    $this->cache_dir          = $config['cache_dir'];
+    $this->compile_check = $config['compile_check'];
+    $this->debugging        = $config['debugging'];
+    $this->caching             = $config['caching'];
+    $this->title                   = $config['title'];
+    $this->language          = $config['language'];
+    $this->log_dir              = $config['log_dir'];
+    $this->log_level          = $config['log_level'];
+    $this->log_ident          = $config['log_ident'];
+    $this->auth_dir            = $config['auth_dir'];
+
+    // Defaults for empty values
+    if(empty($this->compile_check)) $this->compile_check = True;
+    if(empry($this->caching)) $this->caching = False;
+    if(empty($this->debugging)) $this->debugging = False;
+    if(empty($this->title)) $this->title = "WA_title";
+    if(empty($this->language)) $this->language = "en";
+    if(empty($this->log_dir)) $this->log_dir = "/var/log/" . $this->title . "/";
+    if(empty($this->log_level)) $this->log_level = Log::UPTO(PEAR_LOG_INFO);
+
+    //  Work out the full URL incase rewriting is used
     $this->url = explode( "/", $_SERVER['REQUEST_URI']);
-    $this->language = $language;
+
+    // Prepare database connections
+    $this->connections = array();
+
+    // Prepare user object, and load it if we have one already
+    $this->user = array();
+    if($this->exists_user()) $this->user = $_SESSION['WAF']['user'];
+
+    // Create all the stock log files, others can be user generated
+    $this->logs = array();
+    $this->create_log_files();
+
+    // Prepare any known authentication objects
+    $this->authentication_objects = array();
+    if(!empty($this->auth_dir))
+    {
+      $this->register_authentication_directory($this->auth_dir);
+    }
+
+    if(!isset($_SESSION['WAF'])) $this->environment_sanity_check();
   }
+
+  function environment_sanity_check()
+  {
+     if (version_compare(phpversion(), "5.1.0", "<="))
+    {
+       $this->halt("WAF requires at least PHP 5.1");
+    }
+    if(ini_get("register_globals"))
+    {
+      $this->halt("WAF does not support register globals for security reasons");
+    }
+    if(get_magic_quotes_gpc())
+    {
+      $this->halt("WAF: Requires magic quotes on for GPC");
+    }
+    if(WAF_INIT_DEBUG)
+    {
+      echo "WAF: Sanity checks passed<br />";
+    }
+  }
+
+  /* Log Handling Functions */
+
+  /**
+  * Create stock log files
+  */
+  function create_log_files()
+  {
+    $extras = array('mode' => 0600, 'timeFormat' => '%X %x');
+    $this->create_log_file('general', $extras, $this->log_level);
+    $this->create_log_file('debug', $extras, $this->log_level);
+    $this->create_log_file('security', $extras, $this->log_level);
+    $this->create_log_file('panic', $extras, $this->log_level);
+  }
+
+  /**
+  * Create any log file
+  *
+  * @param string $name the name of the log file to create
+  * @param array $permissions the values as specified by PEAR LOG
+  * @param array $level the log level (or bit mask) to use
+  */
+  function create_log_file($name, $permissions, $level)
+  {
+    $this->logs[$name] = &Log::singleton('file', $this->log_dir . $name . ".log", $ident, $permissions, $level);
+  }
+
+  /**
+  * Log a message
+  *
+  * @param string $message the message to log
+  * @param int the error level to use in the logging
+  * @param string the name of the log file to use, defaults to general
+  */
+  function log($message, $level = PEAR_LOG_NOTICE, $name = 'general')
+  {
+    $this->logs[$name]->log($message, $level);
+  }
+
+  /**
+  * Set the log identifier string on all logs
+  *
+  * @param string the new log ident string
+  */
+  function set_log_ident($ident)
+  {
+    foreach($this->logs as $log)
+    {
+      $log->setIdent($ident);
+    }
+  }
+
+  /* Database connection functions */
+
+  /** Adds a data source to the WAF 
+  * This goes into the array, the first registered source is the default, and the ident will
+  * always be changed to 'default' to reflect this
+  * @param string $ident used to identify the connection elsewhere
+  * @param string $dsn the standard format connection string for the database
+  * @param string $username the username to use
+  * @param string $password the password to use
+  * @param string $extra any extra information
+  */
+  function register_data_connection($ident, $dsn, $username, $password, $extra=array())
+  {
+    $connection = new wa_data_connection($dsn, $username, $password, $extra);
+    if(empty($this->connections))
+    {
+      $this->connections = array();
+      $ident = 'default';
+    }
+    $this->connections[$ident] = $connection;
+  }
+
+
+  /* Authentication functions */
+
+  /**
+  * Adds an authentication mechanism to the WAF
+  *
+  * A WAF authentication mechanism is a special class with a member function called
+  * waf_authenticate_user($username, $password), it may use cookies or the presented
+  * credentials to check the user. The function should return a user array on success,
+  * or FALSE on failure.
+  *
+  * @param object $object_name an instance that can allow waf_authenticate_user() to be called
+  */
+  function register_authentication_object($object_name)
+  {
+      array_push($this->authentication_objects, $object_name);
+  }
+
+  /**
+  * Adds a directory from which to auto load authentication objects
+  *
+  * This specifies a directory, say "auth.d" in which there are a number of php
+  * files that define authentication objects. The format of the filenames should
+  * be nn_classname.class.php, or simply nn_classname.php.
+  * The files are loaded in order of the numbers that start the filename and then
+  * objects are automatically created and registered as authentication objects.
+  *
+  * This provides a simple plugable interface for authentication.
+  *
+  * @param string the directory containing authentication files
+  * @return the number of objects added, or -1 if nothing was done
+  */
+  function register_authentication_directory($directory)
+  {
+    if($this->exists_user()) return(-1); // No point until a log off
+
+    $objects_added = 0;
+
+    $this->log("Loading from authentication directory $directory", PEAR_LOG_DEBUG, "debug");
+    $dir = new DirectoryIterator($directory);
+    foreach($dir as $file)
+    {
+      // Only interested in files
+      if(!$file->isfile()) continue;
+      $filename = $file->getFilename();
+      if(substr($filename, -1) == "~") continue; // Don't include any old backup files from edits
+      $this->log("Loading $filename", PEAR_LOG_DEBUG, "debug");
+      require_once($directory . "/" . $filename);
+
+      // Register the object
+      $name = explode("_", $file->getFilename());
+      $name = explode(".", $name[1]);
+
+      $object = new $name;
+      $this->register_authentication_object($object);
+      $objects_added++;
+    }
+    return($objects_added);
+  }
+
+
+  function exists_user()
+  {
+    return(isset($_SESSION['WAF']['user']));
+  }
+
+  /** Attempts to verify the user against all authentication mechanisms in turn
+  *
+  * @param string username the login name of the user (if known)
+  * @param string password the password of the user (if known)
+  * @return the function returns a boolean success value, and populates $user on success
+  * @see user
+  */
+  function login_user($username, $password)
+  {
+    // Already in the session?
+    if(isset($_SESSION['WAF']['user']))
+    {
+      $this->set_log_ident($this->user['username']);
+      return TRUE;
+    }
+
+    // Try each authentication object in registration order
+    foreach($this->authentication_objects as $auth_object)
+    {
+      $test = $auth_object->waf_authenticate_user($username, $password, $data);
+      if($test != FALSE)
+      {
+        $this->user = $test;
+        $_SESSION['WAF']['user'] = $this->user;
+        $this->set_log_ident($username);
+        return(TRUE);
+      }
+    }
+    // All authentication mechanisms failed
+    return (FALSE);
+  }
+
+
+  /** Logs out the current user
+  */
+  function logout_user()
+  {
+    unset($_SESSION['WAF']['user']);
+    $this->set_log_ident("");
+  }
+
 
 /**
  * The idea here is to return a simple array object containing all the relevant user info.
@@ -43,7 +302,6 @@ class WA extends Smarty
  * creation of test user in SLAM and special users and SLAM will also interogate a simple
  * web services layer to return authenticated academic and student users.
  */
-
 	function load_user($username, $password) 
   {    
     $stub_user = array();
