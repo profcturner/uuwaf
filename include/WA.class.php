@@ -97,7 +97,7 @@ class WA extends Smarty
 
   function environment_sanity_check()
   {
-     if (version_compare(phpversion(), "5.1.0", "<="))
+    if (version_compare(phpversion(), "5.1.0", "<="))
     {
        $this->halt("WAF requires at least PHP 5.1");
     }
@@ -113,6 +113,7 @@ class WA extends Smarty
     {
       echo "WAF: Sanity checks passed<br />";
     }
+    $_SESSION['WAF']['sanity'] = true;
   }
 
   /* Log Handling Functions */
@@ -372,7 +373,7 @@ class WA extends Smarty
   */
   function halt($message="")
   {
-    die();
+    die($message);
   }
 
 

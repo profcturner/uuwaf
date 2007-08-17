@@ -31,27 +31,30 @@ class DTO
   * The database is considered essential, and so a panic log entry will be created
   * if it cannot be opened, and the application will be terminated.
   *
-  * @param string $host hostname of database server
-  * @param string $user username used for database connection
-  * @param string $pass password used for database connection
-  * @param string $name database to open on the server
-  * @todo Currently hardcoded to MySQL
-  * @todo Need to allow more rich connection strings, and defaults
+  * @param string $handle identifier for a previously registered data source
   */
-  function __construct($host, $user, $pass, $name)
+  function __construct($handle = 'default')
   {
     global $waf;
+
+    if(!count($waf->connections))
+    {
+      $waf->log("No database connections registered", PEAR_LOG_EMERG, 'panic');
+      WA::halt("No database connections registered");
+    }
     $waf->log("DTO construct called", PEAR_LOG_DEBUG, 'debug');
+
+    $connection = $waf->connections[$handle];
 
     try
     {
-      $this->_con = new PDO("mysql:host=$host;dbname=$name", $user, $pass);
+      $this->_con = new PDO($connection->dsn, $connection->username, $connection->password, $connection->extra);
     }
     catch (PDOException $e)
     {
       $error_text = $e->getMessage();
       $waf->log("Database connection failure ($error_text)", PEAR_LOG_EMERG, 'panic');
-      WA::halt($e->getMessage);
+      $waf->halt("Could not connect database...");
     }
   }
 

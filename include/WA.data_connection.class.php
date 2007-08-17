@@ -13,7 +13,7 @@ class wa_data_connection
   /** The standard format connection string for the database
   * @var string
   */
-  var $dsn_string;
+  var $dsn;
 
   /** The username to use to login
   * @var string
@@ -47,7 +47,7 @@ class wa_data_connection
     $this->password = $password;
     $this->extra = $extra;
 
-    $this->$con = False;
+    $this->con = False;
   }
 }
 
