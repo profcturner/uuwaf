@@ -48,19 +48,19 @@ class WA extends Smarty
     $this->Smarty();
 
     // Material loaded from config
-    $this->template_dir    = $config['templates_dir'];
-    $this->compile_dir      = $config['templates_c_dir'];
-    $this->config_dir         = $config['config_dir'];
-    $this->cache_dir          = $config['cache_dir'];
+    $this->template_dir  = $config['templates_dir'];
+    $this->compile_dir   = $config['templates_c_dir'];
+    $this->config_dir    = $config['config_dir'];
+    $this->cache_dir     = $config['cache_dir'];
     $this->compile_check = $config['compile_check'];
-    $this->debugging        = $config['debugging'];
-    $this->caching             = $config['caching'];
-    $this->title                   = $config['title'];
-    $this->language          = $config['language'];
-    $this->log_dir              = $config['log_dir'];
-    $this->log_level          = $config['log_level'];
-    $this->log_ident          = $config['log_ident'];
-    $this->auth_dir            = $config['auth_dir'];
+    $this->debugging     = $config['debugging'];
+    $this->caching       = $config['caching'];
+    $this->title         = $config['title'];
+    $this->language      = $config['language'];
+    $this->log_dir       = $config['log_dir'];
+    $this->log_level     = $config['log_level'];
+    $this->log_ident     = $config['log_ident'];
+    $this->auth_dir      = $config['auth_dir'];
 
     // Defaults for empty values
     if(empty($this->compile_check)) $this->compile_check = True;
@@ -220,11 +220,14 @@ class WA extends Smarty
   *
   * @param string the directory containing authentication files
   * @return the number of objects added, or -1 if nothing was done
-  * @todo regular expression matching on filenames might be worthwhile
+  * @todo default directory order *seems* to work, if this fails on some environments note that $matches[1] contains the priority.
   */
   function register_authentication_directory($directory)
   {
     if($this->exists_user()) return(-1); // No point until a log off
+
+    // Declare a test expression for valid files
+    $test_expr = "/^([0-9][0-9])_([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+\.)?php$/";
 
     $objects_added = 0;
 
@@ -235,16 +238,17 @@ class WA extends Smarty
       // Only interested in files
       if(!$file->isfile()) continue;
       $filename = $file->getFilename();
-      if(substr($filename, -1) == "~") continue; // Don't include any old backup files from edits
+      $matches = array();
+      if(!preg_match($test_expr, $filename, $matches)) continue; // invalid filename
+
+      // Still here?
+      $classname = $matches[2];
+
       $this->log("Loading $filename", PEAR_LOG_DEBUG, "debug");
       require_once($directory . "/" . $filename);
 
-
       // Register the object
-      $name = explode("_", $file->getFilename());
-      $name = explode(".", $name[1]);
-
-      $object = new $name[0];
+      $object = new $classname;
       $this->register_authentication_object($object);
       $objects_added++;
     }
