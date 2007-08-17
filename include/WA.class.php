@@ -48,19 +48,19 @@ class WA extends Smarty
     $this->Smarty();
 
     // Material loaded from config
-    $this->template_dir  = $config['templates_dir'];
-    $this->compile_dir   = $config['templates_c_dir'];
-    $this->config_dir    = $config['config_dir'];
-    $this->cache_dir     = $config['cache_dir'];
-    $this->compile_check = $config['compile_check'];
-    $this->debugging     = $config['debugging'];
-    $this->caching       = $config['caching'];
-    $this->title         = $config['title'];
-    $this->language      = $config['language'];
-    $this->log_dir       = $config['log_dir'];
-    $this->log_level     = $config['log_level'];
-    $this->log_ident     = $config['log_ident'];
-    $this->auth_dir      = $config['auth_dir'];
+    $this->template_dir  = $config['waf']['templates_dir'];
+    $this->compile_dir   = $config['waf']['templates_c_dir'];
+    $this->config_dir    = $config['waf']['config_dir'];
+    $this->cache_dir     = $config['waf']['cache_dir'];
+    $this->compile_check = $config['waf']['compile_check'];
+    $this->debugging     = $config['waf']['debugging'];
+    $this->caching       = $config['waf']['caching'];
+    $this->title         = $config['waf']['title'];
+    $this->language      = $config['waf']['language'];
+    $this->log_dir       = $config['waf']['log_dir'];
+    $this->log_level     = $config['waf']['log_level'];
+    $this->log_ident     = $config['waf']['log_ident'];
+    $this->auth_dir      = $config['waf']['auth_dir'];
 
     // Defaults for empty values
     if(empty($this->compile_check)) $this->compile_check = True;
@@ -79,7 +79,7 @@ class WA extends Smarty
 
     // Prepare user object, and load it if we have one already
     $this->user = array();
-    if($this->exists_user()) $this->user = $_SESSION['WAF']['user'];
+    if($this->exists_user()) $this->user = $_SESSION['waf']['user'];
 
     // Create all the stock log files, others can be user generated
     $this->logs = array();
@@ -92,7 +92,7 @@ class WA extends Smarty
       $this->register_authentication_directory($this->auth_dir);
     }
 
-    if(!isset($_SESSION['WAF'])) $this->environment_sanity_check();
+    if(!isset($_SESSION['waf'])) $this->environment_sanity_check();
   }
 
   function environment_sanity_check()
@@ -113,7 +113,7 @@ class WA extends Smarty
     {
       echo "WAF: Sanity checks passed<br />";
     }
-    $_SESSION['WAF']['sanity'] = true;
+    $_SESSION['waf']['sanity'] = true;
   }
 
   /* Log Handling Functions */
@@ -232,33 +232,41 @@ class WA extends Smarty
     $objects_added = 0;
 
     $this->log("Loading from authentication directory $directory", PEAR_LOG_DEBUG, "debug");
-    $dir = new DirectoryIterator($directory);
-    foreach($dir as $file)
+    
+    try
     {
-      // Only interested in files
-      if(!$file->isfile()) continue;
-      $filename = $file->getFilename();
-      $matches = array();
-      if(!preg_match($test_expr, $filename, $matches)) continue; // invalid filename
-
-      // Still here?
-      $classname = $matches[2];
-
-      $this->log("Loading $filename", PEAR_LOG_DEBUG, "debug");
-      require_once($directory . "/" . $filename);
-
-      // Register the object
-      $object = new $classname;
-      $this->register_authentication_object($object);
-      $objects_added++;
+      $dir = new DirectoryIterator($directory);
+      foreach($dir as $file)
+      {
+        // Only interested in files
+        if(!$file->isfile()) continue;
+        $filename = $file->getFilename();
+        $matches = array();
+        if(!preg_match($test_expr, $filename, $matches)) continue; // invalid filename
+  
+        // Still here?
+        $classname = $matches[2];
+  
+        $this->log("Loading $filename", PEAR_LOG_DEBUG, "debug");
+        require_once($directory . "/" . $filename);
+  
+        // Register the object
+        $object = new $classname;
+        $this->register_authentication_object($object);
+        $objects_added++;
+      }
+      return($objects_added);
     }
-    return($objects_added);
+    catch (RuntimeException $e)
+    {
+      $this->log("Error while loading the Auth directory", PEAR_LOG_DEBUG, "debug");
+    }
   }
 
 
   function exists_user()
   {
-    return(isset($_SESSION['WAF']['user']));
+    return(isset($_SESSION['waf']['user']));
   }
 
   /** Attempts to verify the user against all authentication mechanisms in turn
@@ -271,7 +279,7 @@ class WA extends Smarty
   function login_user($username, $password)
   {
     // Already in the session?
-    if(isset($_SESSION['WAF']['user']))
+    if(isset($_SESSION['waf']['user']))
     {
       $this->set_log_ident($this->user['username']);
       return TRUE;
@@ -284,7 +292,7 @@ class WA extends Smarty
       if($test != FALSE)
       {
         $this->user = $test;
-        $_SESSION['WAF']['user'] = $this->user;
+        $_SESSION['waf']['user'] = $this->user;
         $this->set_log_ident($username);
         return(TRUE);
       }
@@ -298,7 +306,7 @@ class WA extends Smarty
   */
   function logout_user()
   {
-    unset($_SESSION['WAF']['user']);
+    unset($_SESSION['waf']['user']);
     $this->set_log_ident("");
   }
 
@@ -386,9 +394,7 @@ class WA extends Smarty
   */
   function security_log($message)
   {
-    global $logs;
-
-    $logs['security']->log($message . "[IP:" . $_SERVER['REMOTE_ADDR'] . "]", PEAR_LOG_ALERT);
+    $this->log($message . "[IP:" . $_SERVER['REMOTE_ADDR'] . "]", PEAR_LOG_ALERT, "security");
   }
 
 
@@ -440,7 +446,7 @@ class WA extends Smarty
     $nav = array();
     $group = strtolower($group);
     // Check no-one is trying to insert something witty here...
-    if(!preg_match($group, "/^[A-Za-z0-9_-]+$/"))
+    if(!preg_match('/^[a-z0-9]+$/i', $group))
     {
       $this->security_log("Illegal group attempted : [$group]");
       $this->halt();
@@ -469,7 +475,7 @@ class WA extends Smarty
   function load_section_controller($group, $section) 
   {
     // Check no-one is trying to insert something witty here...
-    if(!preg_match($section, "/^[A-Za-z0-9_-]+$/"))
+    if(!preg_match('/^[a-z0-9_]+$/i', $section))
     {
       $this->security_log("Illegal section attempted : [$section]");
       $this->halt();
@@ -487,7 +493,7 @@ class WA extends Smarty
 	function call_user_function($user, $section, $function, $default="home", $error="error") 
   {
     // Check no-one is trying to insert something witty here...
-    if(!preg_match($function, "/^[A-Za-z0-9_-]+$/"))
+    if(!preg_match('/^[a-z0-9_]+$/i', $function))
     {
       $this->security_log("Illegal function attempted : [$function]");
       $this->halt();

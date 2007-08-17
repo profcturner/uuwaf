@@ -22,8 +22,8 @@ if (!defined(MAX_ROWS_RETURNED)) define("MAX_ROWS_RETURNED", 100);
 class DTO 
 {
   var $id = 0;
-  var $_con = null;
-  var $_status = "";
+  var $handle = 'default';
+  var $_status = '';
 
   /**
   * Opens database ready for use
@@ -48,7 +48,8 @@ class DTO
 
     try
     {
-      $this->_con = new PDO($connection->dsn, $connection->username, $connection->password, $connection->extra);
+      $connection->con = new PDO($connection->dsn, $connection->username, $connection->password, $connection->extra);
+      $this->handle = $handle;
     }
     catch (PDOException $e)
     {
@@ -61,7 +62,7 @@ class DTO
 
   function __destruct()
   {
-    unset($_con);
+    unset($con);
   }
 
 
@@ -91,8 +92,10 @@ class DTO
   * @return the number of objects counted
   */
   function _count($where_clause="") 
-  {
-    $con = $this->_con;
+  {    
+    global $waf;
+
+    $con = $waf->connections[$this->handle]->con;
     $class = $this->_get_tablename();
 
     $object_array = array();  
@@ -118,7 +121,9 @@ class DTO
   */
   function _exists()
   {
-    $con = $this->_con; 
+    global $waf;
+
+    $con = $waf->connections[$this->handle]->con; 
     $class = $this->_get_tablename();
 
     try
@@ -141,7 +146,9 @@ class DTO
   */
   function _field_value_exists($field, $value) 
   {
-    $con = $this->_con; 
+    global $waf;
+
+    $con = $waf->connections[$this->handle]->con; 
     $class = $this->_get_tablename();
 
     try
@@ -163,7 +170,9 @@ class DTO
   */
   function _load_by_id() 
   {
-    $con = $this->_con;
+    global $waf;
+
+    $con = $waf->connections[$this->handle]->con;
     $class = $this->_get_tablename();
     $vars = $this->_get_fieldnames();
 
@@ -191,7 +200,9 @@ class DTO
   */
   function _load_by_field($field) 
   {
-    $con = $this->_con;
+    global $waf;
+
+    $con = $waf->connections[$this->handle]->con;
     $class = $this->_get_tablename();
     $vars = $this->_get_fieldnames();
 
@@ -221,7 +232,9 @@ class DTO
   */
   function _load_by_field_value($field, $value) 
   {
-    $con = $this->_con;
+    global $waf;
+
+    $con = $waf->connections[$this->handle]->con;
     $class = $this->_get_tablename();
     $vars = $this->_get_fieldnames();
 
@@ -252,7 +265,9 @@ class DTO
   */
   function _load_where($where_clause) 
   {
-    $con = $this->_con;
+    global $waf;
+
+    $con = $waf->connections[$this->handle]->con;
     $class = $this->_get_tablename();
     $vars = $this->_get_fieldnames();
 
@@ -288,7 +303,9 @@ class DTO
   */
   function _insert($fields="empty") 
   {
-    $con = $this->_con;
+    global $waf;
+
+    $con = $waf->connections[$this->handle]->con;
     $class = $this->_get_tablename();
     $sql_insert = "INSERT INTO `$class` SET ";
     $sql_sets = "";
@@ -341,7 +358,9 @@ class DTO
   */
   function _update($fields="empty")  
   {
-    $con = $this->_con;
+    global $waf;
+
+    $con = $waf->connections[$this->handle]->con;
     $class = $this->_get_tablename();
     $sql_update = "UPDATE `$class` SET ";
     $sql_sets = "";
@@ -401,7 +420,10 @@ class DTO
   */
   function _get_all($where_clause="", $order_by="", $start=0, $limit=MAX_ROWS_RETURNED) 
   {
-    $con = $this->_con;
+    global $waf;
+
+    $con = $waf->connections[$this->handle]->con;
+
     $class = $this->_get_tablename();
 
     $object_array = array();
@@ -432,7 +454,9 @@ class DTO
   */
   function _get_id_and_field($field, $where_clause="", $order_by="", $start=0, $limit=MAX_ROWS_RETURNED) 
   {
-    $con = $this->_con;
+    global $waf;
+
+    $con = $waf->connections[$this->handle]->con;
     $class = $this->_get_tablename();
 
     $object_array = array(0 => '');
@@ -464,7 +488,9 @@ class DTO
   */
   function _get_all_by_user_id($order_by="", $start=0, $limit=MAX_ROWS_RETURNED) 
   {
-    $con = $this->_con;	
+    global $waf;
+
+    $con = $waf->connections[$this->handle]->con;	
     $class = $this->_get_tablename();
     $vars = $this->_get_fieldnames();
 
@@ -505,7 +531,9 @@ class DTO
   */
   function _get_all_by_field_value($field, $value, $order_by="", $start=0, $limit=MAX_ROWS_RETURNED) 
   {
-    $con = $this->_con;
+    global $waf;
+
+    $con = $waf->connections[$this->handle]->con;
     $class = $this->_get_tablename();
 
     $object_array = array();
@@ -545,7 +573,9 @@ class DTO
   */
   function _get_all_like_field_value($field, $value, $order_by="", $start=0, $limit=MAX_ROWS_RETURNED) 
   {
-    $con = $this->_con;
+    global $waf;
+
+    $con = $waf->connections[$this->handle]->con;
     $class = $this->_get_tablename();
 
     $object_array = array();
@@ -597,7 +627,9 @@ class DTO
   */
   function _remove_where($where_clause="WHERE id=0") 
   {
-    $con = $this->_con;
+    global $waf;
+
+    $con = $waf->connections[$this->handle]->con;
     $class = $this->_get_tablename();
 
     try
