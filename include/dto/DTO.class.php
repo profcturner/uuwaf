@@ -9,11 +9,8 @@
 * @license http://opensource.org/licenses/gpl-license.php GNU Public License v2
 * @package UUWAF
 * @todo Change _init to work on PDO
-* @todo Allow for more sophisticated database parameters
 * @todo Add hooks for Cache
 * @todo Much consolidation is possible here
-* @todo Possibily unsetting the connection is dumb...
-* @todo Static _con?
 *
 */
 

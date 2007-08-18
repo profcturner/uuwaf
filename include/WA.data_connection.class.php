@@ -1,12 +1,18 @@
 <?php
+/**
+* @license http://opensource.org/licenses/gpl-license.php GNU Public License v2
+* @package UUWAF
+*/
 
 /**
 * WAF Database Connections
 *
 * This class holds information about all the database connections that are or may be in use in the lifetime
 * of the application. These objects are held in an array in waf
-* @see waf
-* @package WAF
+* @see WA
+* @author Colin Turner <c.turner@ulster.ac.uk>
+* @version 1.0
+* @package UUWAF
 */
 class wa_data_connection
 {

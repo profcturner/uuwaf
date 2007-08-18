@@ -1,18 +1,9 @@
 <?php
-
 /**
-* WAF - Web Application Framework
-*
-* This is intended to be a simple to use Web Application Framework for PHP5. It uses many features of PHP5 and
-* so cannot easily be backported. In addition, it uses the popular smarty template engine.
-*
-* @author Colin Turner <c.turner@ulster.ac.uk>
-* @author Gordon Crawford <g.crawford@ulster.ac.uk>
 * @license http://opensource.org/licenses/gpl-license.php GNU Public License v2
-* @version 1.0
-* @package WAF
-*
+* @package UUWAF
 */
+
 
 // Internal includes
 //require_once("WA.Utility.class.php");
@@ -24,6 +15,36 @@ require_once("Smarty.class.php");
 // The Web Application Framework uses logging that is global in scope (at least for now)
 require_once('Log.php');
 
+/**
+* WAF - Web Application Framework
+*
+* This is intended to be a simple to use Web Application Framework for PHP.
+* It uses many features of PHP5 such as PDO and so cannot easily be backported, if at all.
+* In addition, it uses the popular smarty template engine.
+* It encapsulates the work of
+* <ul>
+*   <li>Authentication</li>
+*   <li>Logging</li>
+*   <li>Database handling</li>
+* </ul>
+* The object instantiated <strong>must</strong be called "waf" to correctly.
+*
+* To instantiate the object the code should be something like
+* <code>
+* $config = array();
+* $config['title'] = "Application Name";
+* // many more options, examine __construct()
+* $waf = new WA($config);
+* // Note that to work correctly, the object *must* be called $waf.
+* echo "hello world
+* </code>
+*
+* @author Colin Turner <c.turner@ulster.ac.uk>
+* @author Gordon Crawford <g.crawford@ulster.ac.uk>
+* @version 1.0
+* @package UUWAF
+*
+*/
 class WA extends Smarty 
 {
 

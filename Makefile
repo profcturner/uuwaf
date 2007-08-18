@@ -31,7 +31,7 @@ clean:
 # Make development documentation, you will need phpdoc installed
 devdoc:
 	mkdir -p ../phpdoc/
-	phpdoc -d html -d include -t ../phpdoc/ --title "UUWAF Development Documentation"
+	phpdoc -d html -d include -t ../phpdoc/ -dn UUWAF --title "UUWAF Development Documentation"
 
 #
 # Currently contains commands for making with Debian
