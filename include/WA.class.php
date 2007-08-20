@@ -82,6 +82,7 @@ class WA extends Smarty
     $this->log_level     = $config['waf']['log_level'];
     $this->log_ident     = $config['waf']['log_ident'];
     $this->auth_dir      = $config['waf']['auth_dir'];
+    $this->waf_debug     = $config['waf']['waf_debug'];
 
     // Defaults for empty values
     if(empty($this->title)) $this->title = "WA_title";
@@ -141,9 +142,9 @@ class WA extends Smarty
     {
       $this->halt("WAF: Requires PHP  magic quotes off for GPC");
     }
-    if(WAF_INIT_DEBUG)
+    if($this->waf_debug)
     {
-      echo "WAF: Sanity checks passed<br />";
+      $this->log("WAF: Sanity checks passed", PEAR_LOG_DEBUG, 'waf_debug');
     }
     $_SESSION['waf']['sanity'] = true;
   }
@@ -160,6 +161,10 @@ class WA extends Smarty
     $this->create_log_file('debug', $extras, $this->log_level);
     $this->create_log_file('security', $extras, $this->log_level);
     $this->create_log_file('panic', $extras, $this->log_level);
+    if($this->waf_debug)
+    {
+      $this->create_log_file('waf_debug', $extras, $this->log_level);
+    }
   }
 
   /**
@@ -212,6 +217,10 @@ class WA extends Smarty
   */
   function register_data_connection($ident, $dsn, $username, $password, $extra=array())
   {
+    if($this->waf_debug)
+    {
+      $this->log("Registering database connection $ident, dsn $dsn", PEAR_LOG_DEBUG, 'waf_debug');
+    }
     $connection = new wa_data_connection($dsn, $username, $password, $extra);
     if(empty($this->connections))
     {
@@ -468,6 +477,10 @@ class WA extends Smarty
   */.
   function call_user_function($user, $section, $function, $default="home", $error="error") 
   {
+    if($this->waf_debug)
+    {
+      $this->log("User function $section:$function requested", PEAR_LOG_DEBUG, 'waf_debug');
+    }
     // Check no-one is trying to insert something witty here...
     if(!preg_match('/^[a-z0-9_]+$/i', $function))
     {
@@ -600,7 +613,7 @@ class WA extends Smarty
   * Display has been extended to load the default smarty configuration files
   */
   function display($template, $section="", $content_tpl="") 
-  {  
+  {
     $parts = explode(":", $section);
     $this->assign("subsection", $parts[2]);
     $this->config_load("lang_".$this->language.".conf", $section);
