@@ -55,9 +55,9 @@ install: build
 	dh_clean -k 
 	dh_installdirs
 
-	# Add here commands to install the package into debian/opus.
-	#$(MAKE) DESTDIR=$(CURDIR)/debian/opus install
-	$(MAKE) uuwaf debwww=$(CURDIR)/debian/opus/var/www debprefix=$(CURDIR)/debian/opus/usr debetc=$(CURDIR)/debian/opus/etc
+	# Add here commands to install the package into debian/uuwaf.
+	#$(MAKE) DESTDIR=$(CURDIR)/debian/uuwaf install
+	$(MAKE) debs debwww=$(CURDIR)/debian/uuwaf/var/www debprefix=$(CURDIR)/debian/uuwaf/usr debetc=$(CURDIR)/debian/uuwaf/etc
 
 
 # Build architecture-independent files here.

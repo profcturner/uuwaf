@@ -84,13 +84,21 @@ class WA extends Smarty
     $this->auth_dir      = $config['waf']['auth_dir'];
 
     // Defaults for empty values
+    if(empty($this->title)) $this->title = "WA_title";
+    // Make an application name suitable for directories and so on
+    $app_text_name = strtolower($this->title);
+    $app_text_name = str_replace(" ", "_", $app_text_name);
     if(empty($this->compile_check)) $this->compile_check = True;
     if(empty($this->caching)) $this->caching = False;
     if(empty($this->debugging)) $this->debugging = False;
-    if(empty($this->title)) $this->title = "WA_title";
     if(empty($this->language)) $this->language = "en";
-    if(empty($this->log_dir)) $this->log_dir = "/var/log/" . $this->title . "/";
+    if(empty($this->template_dir)) $this->template_dir = "/usr/share/" . $app_text_name . "/templates/";
+    if(empty($this->compile_dir)) $this->compile_dir = "/usr/share/" . $app_text_name . "/templates_c/";
+    if(empty($this->config_dir)) $this->compile_dir = "/usr/share/" . $app_text_name . "/config/";
+    if(empty($this->cache_dir)) $this->cache_dir = "/usr/share/" . $app_text_name . "/cache/";
+    if(empty($this->log_dir)) $this->log_dir = "/var/log/" . $app_text_name . "/";
     if(empty($this->log_level)) $this->log_level = Log::UPTO(PEAR_LOG_INFO);
+
 
     //  Work out the full URL incase rewriting is used
     $this->url = explode( "/", $_SERVER['REQUEST_URI']);
@@ -116,6 +124,9 @@ class WA extends Smarty
     if(!isset($_SESSION['waf'])) $this->environment_sanity_check();
   }
 
+  /**
+  * Performs a number of checks on the PHP environment, once only per session
+  */
   function environment_sanity_check()
   {
     if (version_compare(phpversion(), "5.1.0", "<="))
@@ -124,11 +135,11 @@ class WA extends Smarty
     }
     if(ini_get("register_globals"))
     {
-      $this->halt("WAF does not support register globals for security reasons");
+      $this->halt("WAF does not support PHP register globals for security reasons");
     }
     if(get_magic_quotes_gpc())
     {
-      $this->halt("WAF: Requires magic quotes off for GPC");
+      $this->halt("WAF: Requires PHP  magic quotes off for GPC");
     }
     if(WAF_INIT_DEBUG)
     {
@@ -332,73 +343,6 @@ class WA extends Smarty
   }
 
 
-/**
- * The idea here is to return a simple array object containing all the relevant user info.
- * It is envisaged that this will be accomplished via the SLAM module.  This will enable the 
- * creation of test user in SLAM and special users and SLAM will also interogate a simple
- * web services layer to return authenticated academic and student users.
- */
-	function load_user($username, $password) 
-  {    
-    $stub_user = array();
-    
-    if ($_SESSION[$this->title."_user"]['valid']) 
-    {
-      $stub_user['valid'] = True;
-      $stub_user['user'] = $_SESSION[$this->title."_user"]['user'];
-      $stub_user['groups'] = $_SESSION[$this->title."_user"]['groups'];
-      $stub_user['reg_number'] = $_SESSION[$this->title."_user"]['reg_number'];
-      $stub_user['user_id'] = $_SESSION[$this->title."_user"]['user_id'];;
-    }
-    else
-    {
-      switch ($username) 
-      {
-        case "admin" : 
-          $stub_user['valid'] = True;
-          $stub_user['user'] = array('firstname'=>'Gordon', 'lastname'=>'Crawford', 'email'=>'g.crawford@ulster.ac.uk');
-          $stub_user['groups'] = array('admin');
-          break;
-        case "academic" :
-          $stub_user['valid'] = True;
-          $stub_user['user'] = array('firstname'=>'Gordon', 'lastname'=>'Crawford', 'email'=>'g.crawford@ulster.ac.uk');
-          $stub_user['groups'] = array('academic');
-          break;
-        case "student" :
-          $stub_user['valid'] = True;
-          $stub_user['user'] = array('firstname'=>'Gordon', 'lastname'=>'Crawford', 'email'=>'g.crawford@ulster.ac.uk');
-          $stub_user['groups'] = array('student');
-          $stub_user['reg_number'] = "X1000000";
-          $stub_user['user_id'] = "-1";
-          break;
-        case "super" :
-          $stub_user['valid'] = True;
-          $stub_user['user'] = array('firstname'=>'Gordon', 'lastname'=>'Crawford', 'email'=>'g.crawford@ulster.ac.uk');
-          $stub_user['groups'] = array('super');
-          break;
-        case "guest" :
-          $stub_user['valid'] = True;
-          $stub_user['user'] = array('firstname'=>'Gordon', 'lastname'=>'Crawford', 'email'=>'g.crawford@ulster.ac.uk');
-          $stub_user['groups'] = array('guest');
-          break;
-        case "multi" :
-          $stub_user['valid'] = True;
-          $stub_user['user'] = array('firstname'=>'Gordon', 'lastname'=>'Crawford', 'email'=>'g.crawford@ulster.ac.uk');
-          $stub_user['groups'] = array('super', 'academic');
-          break;
-      }
-  
-      $_SESSION[$this->title."_user"] = $stub_user;
-    }
-    return $stub_user;
-  }
-
-  function unload_user()
-  {
-    $_SESSION[$this->title."_user"] = null;
-    unset($_SESSION);
-  }
-
   /**
   * A function to halt execution
   *
@@ -511,7 +455,18 @@ class WA extends Smarty
     }
   }
 
-	function call_user_function($user, $section, $function, $default="home", $error="error") 
+  /**
+  * Executes a specific function dependant upon URL parameters
+  *
+  * Naturally, your application has to check for security level access on each function.
+  *
+  * @param array $user the user object to pass to the function
+  * @param string $section the section name, validated previously by regexp
+  * @param string $function the function name, validated previously by regexp
+  * @param string $default the function to fall back to if there is a problem
+  * @param string $error an error function to call if needed.
+  */.
+  function call_user_function($user, $section, $function, $default="home", $error="error") 
   {
     // Check no-one is trying to insert something witty here...
     if(!preg_match('/^[a-z0-9_]+$/i', $function))
@@ -522,28 +477,35 @@ class WA extends Smarty
 
     $this->assign("section", $section);
 
-		if ( function_exists($function) ) {
-			$function($this, $user, $this->title);
-		} elseif (function_exists($default)) {
-			$default($this, $user, $USER_SESSION_NAME);
-		} elseif (function_exists($error)) {
-			$error($this, $user, $USER_SESSION_NAME);
-		} else {
-			error($this, $user, $USER_SESSION_NAME);
-		}
-	}
+    if (function_exists($function))
+    {
+      $function($this, $user, $this->title);
+    }
+    elseif (function_exists($default))
+    {
+      $default($this, $user, $USER_SESSION_NAME);
+    }
+    elseif (function_exists($error))
+    {
+      $error($this, $user, $USER_SESSION_NAME);
+    }
+    else
+    {
+      error($this, $user, $USER_SESSION_NAME);
+    }
+  }
 
-/**
- * This method returns user input from a GET or POST or the SESSION
- *
- * The method always returns GET and POSt values over SESSION stored values, and rewrites the SESSION stored 
- * value in this case
- *
- * @param string $name The name of the variable to return
- * @param bool $session A flag to indicate if input should be returned from session and persisted in session
- *
- */
-	function request($name, $session=False) 
+  /**
+  * This method returns user input from a GET or POST or the SESSION
+  *
+  * The method always returns GET and POSt values over SESSION stored values, and rewrites the SESSION stored 
+  * value in this case
+  *
+  * @param string $name The name of the variable to return
+  * @param bool $session A flag to indicate if input should be returned from session and persisted in session
+  *
+  */
+  function request($name, $session=False) 
   {
 		if (key_exists($name, $_REQUEST) || key_exists($name, $_SESSION)) 
     {
@@ -592,6 +554,9 @@ class WA extends Smarty
 		}
 	}
 
+  /**
+  * @todo Gordon, do we need this function as well as the one above?
+  */
 	function goto_page($user, $default="home", $error="error") 
   {
 		$page = WA::request("function", False);
