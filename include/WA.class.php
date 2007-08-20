@@ -323,19 +323,19 @@ class WA extends Smarty
     if(isset($_SESSION['waf']['user']))
     {
       $this->set_log_ident($this->user['username']);
-      return TRUE;
+      return $_SESSION['waf']['user'];
     }
 
     // Try each authentication object in registration order
     foreach($this->authentication_objects as $auth_object)
     {
-      $test = $auth_object->waf_authenticate_user($username, $password, $data);
+      $test = $auth_object->waf_authenticate_user($username, $password);
       if($test != FALSE)
       {
         $this->user = $test;
         $_SESSION['waf']['user'] = $this->user;
         $this->set_log_ident($username);
-        return(TRUE);
+        return($test);
       }
     }
     // All authentication mechanisms failed
@@ -474,7 +474,7 @@ class WA extends Smarty
   * @param string $function the function name, validated previously by regexp
   * @param string $default the function to fall back to if there is a problem
   * @param string $error an error function to call if needed.
-  */.
+  */
   function call_user_function($user, $section, $function, $default="home", $error="error") 
   {
     if($this->waf_debug)
