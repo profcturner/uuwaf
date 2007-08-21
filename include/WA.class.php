@@ -27,7 +27,7 @@ require_once('Log.php');
 *   <li>Logging</li>
 *   <li>Database handling</li>
 * </ul>
-* The object instantiated <strong>must</strong be called "waf" to correctly.
+* The object instantiated <strong>must</strong> be called "waf" to correctly.
 *
 * To instantiate the object the code should be something like
 * <code>
