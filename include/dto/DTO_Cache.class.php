@@ -18,12 +18,10 @@ abstract class DTO_Cache extends DTO
   var $timestamp = "";
 	var $_ttl = 0;  // default time to live in seconds
 
-  function __construct($host, $user, $pass, $name, $ttl=3600)
+  function __construct($handle = 'default', $ttl = 3600)
   {
-    global $logger;
-    $logger->log("DTO construct called");
     $this->_ttl = $ttl;
-    parent::__construct($host, $user, $pass, $name);
+    parent::__construct($handle);
   }
 
 /**

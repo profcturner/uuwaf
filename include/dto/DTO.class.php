@@ -269,7 +269,7 @@ class DTO
   * @param string $where_clause the full 'where' clause, that <strong>must</strong> contain 'where' itself if needed
   * @todo this looks like a prime candidate for injection, we need to explore this... is this widely used?
   */
-  function _load_where($where_clause) 
+  function _load_where($where_clause = "") 
   {
     global $waf;
 
