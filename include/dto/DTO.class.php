@@ -322,7 +322,7 @@ class DTO
       $names = $this->_get_fieldnames(false);
       foreach ($names as $name)
       {
-        array_push($parameters, $this->name);
+        array_push($parameters, $this->$name);
         $sql_sets = $sql_sets."`$name`= ?,";
       }
     }
@@ -331,7 +331,7 @@ class DTO
       $names = array_keys($fields);
       foreach ($names as $name)
       {
-        array_push($parameters, $this->name);
+        array_push($parameters, $this->$name);
         $sql_sets = $sql_sets."`$name`= ?,";
       }
     }
