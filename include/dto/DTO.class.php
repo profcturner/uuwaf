@@ -331,12 +331,11 @@ class DTO
       $names = array_keys($fields);
       foreach ($names as $name)
       {
-        array_push($parameters, $this->$name);
+        array_push($parameters, $fields[$name]);
         $sql_sets = $sql_sets."`$name`= ?,";
       }
     }
     $sql_sets = substr($sql_sets,0,-1).";";
-
     try
     {
       $sql = $con->prepare($sql_insert.$sql_sets);
