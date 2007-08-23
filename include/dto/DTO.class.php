@@ -19,7 +19,7 @@ if (!defined(MAX_ROWS_RETURNED)) define("MAX_ROWS_RETURNED", 100);
 class DTO 
 {
   var $id = 0;
-  var $handle = 'default';
+  var $_handle = 'default';
   var $_status = '';
 
   /**
@@ -54,7 +54,7 @@ class DTO
         $waf->connections[$handle]->con->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
         //$connection->con = new PDO($connection->dsn, $connection->username, $connection->password, $connection->extra);
-        $this->handle = $handle;
+        $this->_handle = $handle;
       }
       catch (PDOException $e)
       {
@@ -101,7 +101,7 @@ class DTO
   {    
     global $waf;
 
-    $con = $waf->connections[$this->handle]->con;
+    $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
 
     $object_array = array();  
@@ -129,7 +129,7 @@ class DTO
   {
     global $waf;
 
-    $con = $waf->connections[$this->handle]->con; 
+    $con = $waf->connections[$this->_handle]->con; 
     $class = $this->_get_tablename();
 
     try
@@ -154,7 +154,7 @@ class DTO
   {
     global $waf;
 
-    $con = $waf->connections[$this->handle]->con; 
+    $con = $waf->connections[$this->_handle]->con; 
     $class = $this->_get_tablename();
 
     try
@@ -178,7 +178,7 @@ class DTO
   {
     global $waf;
 
-    $con = $waf->connections[$this->handle]->con;
+    $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
     $vars = $this->_get_fieldnames();
 
@@ -208,7 +208,7 @@ class DTO
   {
     global $waf;
 
-    $con = $waf->connections[$this->handle]->con;
+    $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
     $vars = $this->_get_fieldnames();
 
@@ -240,7 +240,7 @@ class DTO
   {
     global $waf;
 
-    $con = $waf->connections[$this->handle]->con;
+    $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
     $vars = $this->_get_fieldnames();
 
@@ -273,7 +273,7 @@ class DTO
   {
     global $waf;
 
-    $con = $waf->connections[$this->handle]->con;
+    $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
     $vars = $this->_get_fieldnames();
 
@@ -311,7 +311,7 @@ class DTO
   {
     global $waf;
 
-    $con = $waf->connections[$this->handle]->con;
+    $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
     $sql_insert = "INSERT INTO `$class` SET ";
     $sql_sets = "";
@@ -366,7 +366,7 @@ class DTO
   {
     global $waf;
 
-    $con = $waf->connections[$this->handle]->con;
+    $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
     $sql_update = "UPDATE `$class` SET ";
     $sql_sets = "";
@@ -424,10 +424,10 @@ class DTO
   * @param integer $limit the number of rows to capture
   * @return array of objects
   */
-  function _get_all($where_clause="", $order_by="", $start=0, $limit=MAX_ROWS_RETURNED) 
+  function _get_all($where_clause="", $order_by="", $start=0, $limit=MAX_ROWS_RETURNED, $parse = False) 
   {
     global $waf;
-    $con = $waf->connections[$this->handle]->con;
+    $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
 
     if($waf->waf_debug)
@@ -446,7 +446,7 @@ class DTO
       while ($results_row = $sql->fetch(PDO::FETCH_ASSOC))
       {
         $id = $results_row["id"];
-        $object_array[] = $this->load_by_id($id);
+        $object_array[] = $this->load_by_id($id, $parse);
       }
     }
     catch (PDOException $e)
@@ -465,7 +465,7 @@ class DTO
   {
     global $waf;
 
-    $con = $waf->connections[$this->handle]->con;
+    $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
 
     $object_array = array(0 => '');
@@ -499,7 +499,7 @@ class DTO
   {
     global $waf;
 
-    $con = $waf->connections[$this->handle]->con;	
+    $con = $waf->connections[$this->_handle]->con;	
     $class = $this->_get_tablename();
     $vars = $this->_get_fieldnames();
 
@@ -542,7 +542,7 @@ class DTO
   {
     global $waf;
 
-    $con = $waf->connections[$this->handle]->con;
+    $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
 
     $object_array = array();
@@ -584,7 +584,7 @@ class DTO
   {
     global $waf;
 
-    $con = $waf->connections[$this->handle]->con;
+    $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
 
     $object_array = array();
@@ -638,7 +638,7 @@ class DTO
   {
     global $waf;
 
-    $con = $waf->connections[$this->handle]->con;
+    $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
 
     try

@@ -448,6 +448,7 @@ class WA extends Smarty
   */
   function load_section_controller($group, $section) 
   {
+    if(empty($section)) return;
     // Check no-one is trying to insert something witty here...
     if(!preg_match('/^[a-z0-9_]+$/i', $section))
     {
