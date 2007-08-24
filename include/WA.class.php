@@ -348,6 +348,7 @@ class WA extends Smarty
   function logout_user()
   {
     unset($_SESSION['waf']['user']);
+    unset($this->user);
     $this->set_log_ident("");
   }
 

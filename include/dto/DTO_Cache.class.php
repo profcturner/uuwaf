@@ -10,8 +10,7 @@
 
 if (!defined(MAX_ROWS_RETURNED)) define("MAX_ROWS_RETURNED", 100);
 
-require_once("waf/db/DB_Connection.class.php"); 
-require_once("waf/dto/DTO.class.php");
+require_once("dto/DTO.class.php");
  
 abstract class DTO_Cache extends DTO
 {
@@ -32,7 +31,7 @@ abstract class DTO_Cache extends DTO
  * should occur.
  */
 
-  protected abstract function _refresh();
+  protected abstract function _refresh($field);
 	
 	public final function _load_by_id() 
   {
@@ -40,7 +39,7 @@ abstract class DTO_Cache extends DTO
 
     if (time() > (strtotime($this->timestamp) + $this->_ttl))
     {
-      $this->_refresh();
+      $this->_refresh("id");
     } 
 	}
 
