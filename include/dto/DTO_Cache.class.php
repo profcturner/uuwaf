@@ -27,7 +27,9 @@ abstract class DTO_Cache extends DTO
 /**
  * If a timestamp is old then refresh the object, this method is a template and 
  *
- *
+ * Note that for some objects _load_by_id and _load_by_field will be used and so the
+ * refresh function must use the $field parameter presence to decide how the refresh 
+ * should occur.
  */
 
   protected abstract function _refresh();
@@ -40,8 +42,6 @@ abstract class DTO_Cache extends DTO
     {
       $this->_refresh();
     } 
-    
-    return $this;
 	}
 
   public final function _load_by_field($field)
@@ -50,10 +50,8 @@ abstract class DTO_Cache extends DTO
 
     if (time() > (strtotime($this->timestamp) + $this->_ttl))
     {
-      $this->_refresh();
+      $this->_refresh($field);
     } 
-    
-    return $this;
   }
 	
 }	
