@@ -344,6 +344,8 @@ class WA extends Smarty
 
 
   /** Logs out the current user
+  * 
+  * Reset Session, $this and log_ident
   */
   function logout_user()
   {
