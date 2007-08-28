@@ -719,6 +719,9 @@ class DTO
 
 /**
  * This method returns TRUE or FALSE, depending on whether the value validates agains the type. 
+ * The field_defs can now include a validation element, that will be used instead of the type validation.
+ *
+ * TODO Need to add a required element to the field_def
  *
  * @param string $field
  * @param string $value
@@ -730,66 +733,73 @@ class DTO
 
   function _validate_field($field, $value) 
   {
-    global $logger;
-        
-        $type = $this->_field_defs[$field][type];
-        $valid = true;
+    if (empty($this->_field_defs[$field]['validation']))
+    {
+      $type = $this->_field_defs[$field]['type'];
+      $valid = true;
 
-        switch ($type) {
+      switch ($type) {
 
-        case "text" :   
-            if ($this->_field_defs[$field][maxsize]) {
-                $maxsize = $this->_field_defs[$field][maxsize];
-            } else {
-                $maxsize = $this->_field_defs[$field][size];
-            }
-            if (strlen($value) > $maxsize) {
-                $valid = false;
-            }
-            break;
-        case "textarea" :   
-            if ($this->_field_defs[$field][maxsize]) {
-                $maxsize = $this->_field_defs[$field][maxsize];
-            } else {
-                $maxsize = $this->_field_defs[$field][rowsize]*$this->_field_defs[$field][colsize];
-            }
-            if (strlen($value) > $maxsize) {
-                $valid = false;
-            }
-            break;
-        case "email" :
-            if (strlen($value) > 0 and !ereg("^[^@ ]+@[^@ ]+\.[^@ \.]+$", $value)) {
-                $valid = false;
-            }
-            break;
-        case "postcode" :
-            if (!eregi('^[A-Z]{1,2}[0-9]{1,2}[[:space:]][0-9]{1}[A-Z]{2}$', $value) and strlen($value) > 0) {
-                $valid = false;
-            }
-            break;
-        case "numeric" :
-            if (!is_numeric($value) and strlen($value) > 0) {
-                $valid = false;
-            }
-            break;
-        case "url" :
-            if (strlen($value) > 0 and !eregi("^(((ht|f)tp(s?))\:\/\/)?(www.|[a-zA-Z].)[a-zA-Z0-9\-\.]+\.(com|edu|gov|mil|net|org|biz|info|name|museum|us|ca|uk)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\;\?\'\\\+&%\$#\=~_\-]+))*$", $value)) {
-                $valid = false;
-            }
-            break;
-        case "currency" :
-            if (strlen($value) > 0 and !eregi("^[0-9]*[.]*[0-9]{0,2}$", $value)) {
-                $valid = false;
-            }
-            break;
-        case "date" :
-            if (strlen($value) > 0 and !ereg("(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[012])-([0-9]{4})", $value)) {
-                $valid = false;
-            }
-            break;
-        }
-        return $valid;
+      case "text" :   
+          if ($this->_field_defs[$field]['maxsize']) {
+              $maxsize = $this->_field_defs[$field]['maxsize'];
+          } else {
+              $maxsize = $this->_field_defs[$field]['size'];
+          }
+          if (strlen($value) > $maxsize) {
+              $valid = false;
+          }
+          break;
+      case "textarea" :   
+          if ($this->_field_defs[$field]['maxsize']) {
+              $maxsize = $this->_field_defs[$field]['maxsize'];
+          } else {
+              $maxsize = $this->_field_defs[$field]['rowsize']*$this->_field_defs[$field]['colsize'];
+          }
+          if (strlen($value) > $maxsize) {
+              $valid = false;
+          }
+          break;
+      case "email" :
+          if (strlen($value) > 0 and !ereg("^[^@ ]+@[^@ ]+\.[^@ \.]+$", $value)) {
+              $valid = false;
+          }
+          break;
+      case "postcode" :
+          if (!eregi('^[A-Z]{1,2}[0-9]{1,2}[[:space:]][0-9]{1}[A-Z]{2}$', $value) and strlen($value) > 0) {
+              $valid = false;
+          }
+          break;
+      case "numeric" :
+          if (!is_numeric($value) and strlen($value) > 0) {
+              $valid = false;
+          }
+          break;
+      case "url" :
+          if (strlen($value) > 0 and !eregi("^(((ht|f)tp(s?))\:\/\/)?(www.|[a-zA-Z].)[a-zA-Z0-9\-\.]+\.(com|edu|gov|mil|net|org|biz|info|name|museum|us|ca|uk)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\;\?\'\\\+&%\$#\=~_\-]+))*$", $value)) {
+              $valid = false;
+          }
+          break;
+      case "currency" :
+          if (strlen($value) > 0 and !eregi("^[0-9]*[.]*[0-9]{0,2}$", $value)) {
+              $valid = false;
+          }
+          break;
+      case "date" :
+          if (strlen($value) > 0 and !ereg("(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[012])-([0-9]{4})", $value)) {
+              $valid = false;
+          }
+          break;
+      }
     }
+    else
+    {
+      if (!ereg($this->_field_defs[$field]['validation'], $value)) {
+        $valid = false;
+      }
+    }
+    return $valid;
+  }
 
   function _validate($nvp_array) 
   {
