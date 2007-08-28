@@ -808,7 +808,7 @@ class DTO
         $fields = array_keys($nvp_array);
         foreach ($fields as $field) {
             if (!$this->_validate_field($field, $nvp_array[$field])) {
-                $message = $this->validate_field($field, $nvp_array[$field]);
+                $message = $this->_validate_field($field, $nvp_array[$field]);
                 $validation_messages = array_merge($validation_messages, array($field => $message));
             }
         }
