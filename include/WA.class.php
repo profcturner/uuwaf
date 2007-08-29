@@ -620,7 +620,9 @@ class WA extends Smarty
   {
     $parts = explode(":", $section);
     $this->assign("subsection", $parts[2]);
-    $this->config_load("lang_".$this->language.".conf", $section);
+    if (file_exists("lang_".$this->language.".conf"))
+      $this->config_load("lang_".$this->language.".conf", $section);
+    if (file_exists("local_".$this->language.".conf"))
     $this->config_load("local_".$this->language.".conf", $section);
       
     if (strlen($content_tpl) > 0) 
