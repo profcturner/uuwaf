@@ -45,7 +45,7 @@ class DTO
     }
 
     $connection = $waf->connections[$handle];
-    //if(!$connection)
+    //if($connection == False)
     //{
       try
       {
@@ -62,7 +62,11 @@ class DTO
         $waf->log("Database connection failure ($error_text)", PEAR_LOG_EMERG, 'panic');
         $waf->halt("Could not connect database...");
       }
-    //}
+    /*}
+    else
+    {
+      $this->_handle = $handle;
+    }*/
   }
 
 
@@ -431,7 +435,7 @@ class DTO
 
     if($waf->waf_debug)
     {
-      $waf->log("$class::_get_all() called", PEAR_LOG_DEBUG, "waf_debug");
+      $waf->log("$class::_get_all() called [$where_clause:$order_by:$start:$limit]", PEAR_LOG_DEBUG, "waf_debug");
     }
 
     $object_array = array();
