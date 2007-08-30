@@ -524,52 +524,57 @@ class WA extends Smarty
   */
   function request($name, $session=False) 
   {
-		if (key_exists($name, $_REQUEST) || key_exists($name, $_SESSION)) 
+    if (key_exists($name, $_REQUEST) || key_exists($name, $_SESSION)) 
     {
-			if ($session) 
+      if ($session) 
       {
-				if (!is_array($_REQUEST[$name])) 
-        {  
-					if (isset($_REQUEST[$name])) 
+        if (!is_array($_REQUEST[$name]))
+        {
+          if (isset($_REQUEST[$name])) 
           {
-						$_SESSION[$name] = addslashes(str_replace("\"", "'", "$_REQUEST[$name]"));
-						return addslashes(str_replace("\"", "'", "$_REQUEST[$name]"));
-					} 
-          else 
+            // CT: I suspect addition of slashes was only needed for the database
+            // this is no longer the case because of PDO escaping, and probably
+            // isn't needed anywhere else, commenting this while we test that.
+            //$_SESSION[$name] = addslashes(str_replace("\"", "'", "$_REQUEST[$name]"));
+            //return addslashes(str_replace("\"", "'", "$_REQUEST[$name]"));
+            $_SESSION[$name] = $_REQUEST[$name];
+            return($_REQUEST[$name]);
+          }
+          else
           {
-						return $_SESSION[$name];
-					}
-					
-				} 
+            return $_SESSION[$name];
+          }
+        }
         else 
         {
-					return $_REQUEST[$name];
-				}
-			} 
-      else 
+          return $_REQUEST[$name];
+        }
+      }
+      else
       {
-				if (!is_array($_REQUEST[$name])) 
-        {  
-					if (isset($_REQUEST[$name])) 
-          {
-						return addslashes(str_replace("\"", "'", "$_REQUEST[$name]"));
-					} 
-          else 
-          {
-						return "";
-					}
-				} 
-        else 
+        if (!is_array($_REQUEST[$name])) 
         {
-					return $_REQUEST[$name];
-				}
-			}
-		} 
-    else 
+          if (isset($_REQUEST[$name]))
+          {
+            return($_REQUEST[$name]);
+            //return addslashes(str_replace("\"", "'", "$_REQUEST[$name]"));
+          }
+          else
+          {
+            return "";
+          }
+        }
+        else
+        {
+          return $_REQUEST[$name];
+        }
+      }
+    }
+    else
     {
-			return "";
-		}
-	}
+      return "";
+    }
+  }
 
   /**
   * @todo Gordon, do we need this function as well as the one above?
@@ -586,6 +591,7 @@ class WA extends Smarty
 			$error($this, $user);
 		} else {
 			error($this, $user);
+      // CT: Should this call $this->halt() as a last resort?
 		}
 	}
 
