@@ -261,7 +261,6 @@ class WA extends Smarty
   *
   * @param string the directory containing authentication files
   * @return the number of objects added, or -1 if nothing was done
-  * @todo default directory order *seems* to work, if this fails on some environments note that $matches[1] contains the priority.
   */
   function register_authentication_directory($directory)
   {
@@ -273,7 +272,8 @@ class WA extends Smarty
     $objects_added = 0;
 
     $this->log("Loading from authentication directory $directory", PEAR_LOG_DEBUG, "debug");
-    
+
+    $authentication_files = array();
     try
     {
       $dir = new DirectoryIterator($directory);
@@ -284,24 +284,36 @@ class WA extends Smarty
         $filename = $file->getFilename();
         $matches = array();
         if(!preg_match($test_expr, $filename, $matches)) continue; // invalid filename
-  
-        // Still here?
-        $classname = $matches[2];
-  
+        // Remember the filename
+        $matches['filename'] = $filename;
+
+        $authentication_files[$matches[1]] = $matches;
+      }
+
+      // Sort array on priority, default order is sometimes wrong
+      // and the directory iterator is currently undocumented so we have to do this :-(
+      asort($authentication_files);
+
+      // Now step through them
+      foreach($authentication_files as $authentication_file)
+      {
+        $classname = $authentication_file[2];
+        $filename = $authentication_file['filename'];
+
         $this->log("Loading $filename", PEAR_LOG_DEBUG, "debug");
         require_once($directory . "/" . $filename);
-  
+
         // Register the object
         $object = new $classname;
         $this->register_authentication_object($object);
         $objects_added++;
       }
-      return($objects_added);
     }
     catch (RuntimeException $e)
     {
       $this->log("Error while loading the Auth directory", PEAR_LOG_DEBUG, "debug");
     }
+    return($objects_added);
   }
 
 
@@ -335,7 +347,18 @@ class WA extends Smarty
         $this->user = $test;
         $_SESSION['waf']['user'] = $this->user;
         $this->set_log_ident($username);
+        if($this->waf_debug)
+        {
+          $this->log("authenticated successfully with " . get_class($auth_object), PEAR_LOG_DEBUG, 'waf_debug');
+        }
         return($test);
+      }
+      else
+      {
+        if($this->waf_debug)
+        {
+          $this->log("authentication failed with " . get_class($auth_object), PEAR_LOG_DEBUG, 'waf_debug');
+        }
       }
     }
     // All authentication mechanisms failed
