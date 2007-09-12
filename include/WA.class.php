@@ -69,20 +69,24 @@ class WA extends Smarty
     $this->Smarty();
 
     // Material loaded from config
-    $this->template_dir  = $config['waf']['templates_dir'];
-    $this->compile_dir   = $config['waf']['templates_c_dir'];
-    $this->config_dir    = $config['waf']['config_dir'];
-    $this->cache_dir     = $config['waf']['cache_dir'];
-    $this->compile_check = $config['waf']['compile_check'];
-    $this->debugging     = $config['waf']['debugging'];
-    $this->caching       = $config['waf']['caching'];
-    $this->title         = $config['waf']['title'];
-    $this->language      = $config['waf']['language'];
-    $this->log_dir       = $config['waf']['log_dir'];
-    $this->log_level     = $config['waf']['log_level'];
-    $this->log_ident     = $config['waf']['log_ident'];
-    $this->auth_dir      = $config['waf']['auth_dir'];
-    $this->waf_debug     = $config['waf']['waf_debug'];
+    $this->template_dir           = $config['templates_dir'];
+    $this->compile_dir            = $config['templates_c_dir'];
+    $this->config_dir             = $config['config_dir'];
+    $this->cache_dir              = $config['cache_dir'];
+    $this->compile_check          = $config['compile_check'];
+    $this->debugging              = $config['debugging'];
+    $this->debug_only_on_IP       = $config['debug_only_on_IP'];
+    $this->caching                = $config['caching'];
+    $this->title                  = $config['title'];
+    $this->language               = $config['language'];
+    $this->log_dir                = $config['log_dir'];
+    $this->log_level              = $config['log_level'];
+    $this->log_ident              = $config['log_ident'];
+    $this->auth_dir               = $config['auth_dir'];
+    $this->waf_debug              = $config['waf_debug'];
+    $this->validation_image_ok    = $config['validation_image_ok'];
+    $this->validation_image_fail  = $config['validation_image_fail'];
+    $this->panic_on_sql_error     = $config['panic_on_sql_error'];
 
     // Defaults for empty values
     if(empty($this->title)) $this->title = "WA_title";
@@ -99,7 +103,20 @@ class WA extends Smarty
     if(empty($this->cache_dir)) $this->cache_dir = "/usr/share/" . $app_text_name . "/cache/";
     if(empty($this->log_dir)) $this->log_dir = "/var/log/" . $app_text_name . "/";
     if(empty($this->log_level)) $this->log_level = Log::UPTO(PEAR_LOG_INFO);
+    if(empty($this->panic_on_sql_error)) $this->panic_on_sql_error = true;
 
+    // Check for debugging only on some IPs
+    if(is_array($this->debug_only_on_IP))
+    {
+      if(in_array($_SERVER['REMOTE_ADDR'], $this->debug_only_on_IP))
+      {
+        $this->debugging = true;
+      }
+      else
+      {
+        $this->debugging = false;
+      }
+    }
 
     //  Work out the full URL incase rewriting is used
     $this->url = explode( "/", $_SERVER['REQUEST_URI']);
