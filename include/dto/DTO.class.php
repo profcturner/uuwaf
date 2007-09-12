@@ -94,6 +94,7 @@ class DTO
     $waf->assign("SQL_error", $error_text);
     // Sometimes, on a redirect, we lose the text, so place it in the session in case
     $_SESSION['waf']['SQL_error'] = $error_text;
+
   }
 
   /**
@@ -121,7 +122,7 @@ class DTO
     }
     catch (PDOException $e)
     {
-      $this->_log_sql_error($e, $class, "_count()");
+      $this->_log_sql_error($e, $class, "_count($where_clause)");
     }
     return $results_row[0];
   }
@@ -196,7 +197,7 @@ class DTO
 
       foreach ($vars as $var)
       {
-        $this->$var = $results_row["$var"];
+        if ($var != 'id') $this->$var = $results_row["$var"];
       }
     }
     catch (PDOException $e)
@@ -226,7 +227,7 @@ class DTO
 
       foreach ($vars as $var)
       {
-        $this->$var = $results_row["$var"];
+        if ($var != $field) $this->$var = $results_row["$var"];
       }
     }
     catch (PDOException $e)
