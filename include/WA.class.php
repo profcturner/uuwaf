@@ -63,37 +63,33 @@ class WA extends Smarty
   */
   var $user;
 
+  var $base_dir;
+
   function __construct($config)
   {
     $this->Smarty();
 
-    // Material loaded from config
-    $this->base_dir                   = $config['base_dir'];
+    // Material loaded from config which overrides internals
     $this->template_dir           = $config['templates_dir'];
     $this->compile_dir            = $config['templates_c_dir'];
     $this->config_dir             = $config['config_dir'];
     $this->cache_dir              = $config['cache_dir'];
-    $this->session_dir           = $config['session_dir'];
     $this->compile_check          = $config['compile_check'];
     $this->debugging              = $config['debugging'];
-    $this->debug_only_on_IP       = $config['debug_only_on_IP'];
     $this->caching                = $config['caching'];
-    $this->title                  = $config['title'];
-    $this->language               = $config['language'];
-    $this->log_dir                = $config['log_dir'];
-    $this->log_level              = $config['log_level'];
-    $this->log_ident              = $config['log_ident'];
-    $this->auth_dir               = $config['auth_dir'];
-    $this->waf_debug              = $config['waf_debug'];
-    $this->validation_image_ok    = $config['validation_image_ok'];
-    $this->validation_image_fail  = $config['validation_image_fail'];
-    $this->panic_on_sql_error     = $config['panic_on_sql_error'];
+
+    // Material loaded from config
+    foreach($config as $key => $value)
+    {
+      $this->$key = $value;
+    }
 
     // Defaults for empty values
     if(empty($this->title)) $this->title = "WA_title";
     // Make an application name suitable for directories and so on
     $app_text_name = strtolower($this->title);
     $app_text_name = str_replace(" ", "_", $app_text_name);
+
     if(empty($this->compile_check)) $this->compile_check = True;
     if(empty($this->caching)) $this->caching = False;
     if(empty($this->debugging)) $this->debugging = False;
@@ -107,6 +103,9 @@ class WA extends Smarty
     if(empty($this->log_dir)) $this->log_dir = "/var/log/$app_text_name/";
     if(empty($this->log_level)) $this->log_level = Log::UPTO(PEAR_LOG_INFO);
     if(empty($this->panic_on_sql_error)) $this->panic_on_sql_error = true;
+    if(empty($this->log_mode)) $this->log_mode = '0600';
+    if(empty($this->log_line_format)) $this->log_line_format = '%1$s %2$s %4$s';
+    if(empty($this->log_time_format)) $this->log_time_format = '%d %b %y %H:%M:%S';
 
     // Get the session going!
     session_save_path($this->session_dir);
@@ -180,7 +179,9 @@ class WA extends Smarty
   */
   function create_log_files()
   {
-    $extras = array('mode' => 0600, 'timeFormat' => '%X %x');
+    //$extras = array('mode' => 0600, 'timeFormat' => '%X %x');
+
+    $extras = array('mode' => $this->log_mode, 'lineFormat' => $this->log_line_format, 'timeFormat' => $this->log_time_format);
     $this->create_log_file('general', $extras, $this->log_level);
     $this->create_log_file('debug', $extras, $this->log_level);
     $this->create_log_file('security', $extras, $this->log_level);
