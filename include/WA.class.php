@@ -65,14 +65,15 @@ class WA extends Smarty
 
   function __construct($config)
   {
-    session_start();
     $this->Smarty();
 
     // Material loaded from config
+    $this->base_dir                   = $config['base_dir'];
     $this->template_dir           = $config['templates_dir'];
     $this->compile_dir            = $config['templates_c_dir'];
     $this->config_dir             = $config['config_dir'];
     $this->cache_dir              = $config['cache_dir'];
+    $this->session_dir           = $config['session_dir'];
     $this->compile_check          = $config['compile_check'];
     $this->debugging              = $config['debugging'];
     $this->debug_only_on_IP       = $config['debug_only_on_IP'];
@@ -97,13 +98,19 @@ class WA extends Smarty
     if(empty($this->caching)) $this->caching = False;
     if(empty($this->debugging)) $this->debugging = False;
     if(empty($this->language)) $this->language = "en";
-    if(empty($this->template_dir)) $this->template_dir = "/usr/share/" . $app_text_name . "/templates/";
-    if(empty($this->compile_dir)) $this->compile_dir = "/usr/share/" . $app_text_name . "/templates_c/";
-    if(empty($this->config_dir)) $this->compile_dir = "/usr/share/" . $app_text_name . "/config/";
-    if(empty($this->cache_dir)) $this->cache_dir = "/usr/share/" . $app_text_name . "/cache/";
-    if(empty($this->log_dir)) $this->log_dir = "/var/log/" . $app_text_name . "/";
+    if(empty($this->base_dir)) $this->base_dir = "/usr/share/$app_text_name/";
+    if(empty($this->template_dir)) $this->template_dir = $this->base_dir . "templates/";
+    if(empty($this->compile_dir)) $this->compile_dir = $this->base_dir . "templates_c/";
+    if(empty($this->cache_dir)) $this->cache_dir = $this->base_dir . "templates_cache/";
+    if(empty($this->config_dir)) $this->config_dir = $this->base_dir . "configs/";
+    if(empty($this->session_dir)) $this->session_dir = $this->base_dir . "sessions/";
+    if(empty($this->log_dir)) $this->log_dir = "/var/log/$app_text_name/";
     if(empty($this->log_level)) $this->log_level = Log::UPTO(PEAR_LOG_INFO);
     if(empty($this->panic_on_sql_error)) $this->panic_on_sql_error = true;
+
+    // Get the session going!
+    session_save_path($this->session_dir);
+    session_start();
 
     // Check for debugging only on some IPs
     if(is_array($this->debug_only_on_IP))
