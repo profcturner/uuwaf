@@ -362,7 +362,6 @@ class WA extends Smarty
       $this->set_log_ident($this->user['username']);
       return $_SESSION['waf']['user'];
     }
-
     // Try each authentication object in registration order
     foreach($this->authentication_objects as $auth_object)
     {
@@ -387,6 +386,8 @@ class WA extends Smarty
       }
     }
     // All authentication mechanisms failed
+    $this->security_log("authentication failed for user: $username");
+    sleep(5); // slow down dictionary assaults
     return (FALSE);
   }
 
@@ -419,7 +420,7 @@ class WA extends Smarty
   */
   function security_log($message)
   {
-    $this->log($message . "[IP:" . $_SERVER['REMOTE_ADDR'] . "]", PEAR_LOG_ALERT, "security");
+    $this->log($message . " [IP:" . $_SERVER['REMOTE_ADDR'] . "]", PEAR_LOG_ALERT, "security");
   }
 
 
