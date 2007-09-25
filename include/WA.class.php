@@ -104,8 +104,10 @@ class WA extends Smarty
     if(empty($this->log_level)) $this->log_level = Log::UPTO(PEAR_LOG_INFO);
     if(empty($this->panic_on_sql_error)) $this->panic_on_sql_error = true;
     if(empty($this->log_mode)) $this->log_mode = '0600';
-    if(empty($this->log_line_format)) $this->log_line_format = '%1$s %2$s %4$s';
+    if(empty($this->log_line_format)) $this->log_line_format = '%1$s [%2$s] %4$s';
     if(empty($this->log_time_format)) $this->log_time_format = '%d %b %y %H:%M:%S';
+    if(empty($this->sanity_checking)) $this->sanity_checking = true;
+    if(empty($this->unattended)) $this->unattended = false;
 
     // Get the session going!
     session_save_path($this->session_dir);
@@ -145,7 +147,7 @@ class WA extends Smarty
       $this->register_authentication_directory($this->auth_dir);
     }
 
-    if(!isset($_SESSION['waf'])) $this->environment_sanity_check();
+    if($this->sanity_checking && !isset($_SESSION['waf'])) $this->environment_sanity_check();
   }
 
   /**
@@ -161,7 +163,7 @@ class WA extends Smarty
     {
       $this->halt("WAF does not support PHP register globals for security reasons");
     }
-    if(get_magic_quotes_gpc())
+    if(!$this->unattended && get_magic_quotes_gpc())
     {
       $this->halt("WAF: Requires PHP  magic quotes off for GPC");
     }
@@ -179,16 +181,13 @@ class WA extends Smarty
   */
   function create_log_files()
   {
-    //$extras = array('mode' => 0600, 'timeFormat' => '%X %x');
-
-    $extras = array('mode' => $this->log_mode, 'lineFormat' => $this->log_line_format, 'timeFormat' => $this->log_time_format);
-    $this->create_log_file('general', $extras, $this->log_level);
-    $this->create_log_file('debug', $extras, $this->log_level);
-    $this->create_log_file('security', $extras, $this->log_level);
-    $this->create_log_file('panic', $extras, $this->log_level);
+    $this->create_log_file('general',  $this->log_level);
+    $this->create_log_file('debug', $this->log_level);
+    $this->create_log_file('security', $this->log_level);
+    $this->create_log_file('panic', $this->log_level);
     if($this->waf_debug)
     {
-      $this->create_log_file('waf_debug', $extras, $this->log_level);
+      $this->create_log_file('waf_debug', $this->log_level);
     }
   }
 
@@ -199,9 +198,13 @@ class WA extends Smarty
   * @param array $permissions the values as specified by PEAR LOG
   * @param array $level the log level (or bit mask) to use
   */
-  function create_log_file($name, $permissions, $level)
+  function create_log_file($name,  $level = "")
   {
-    $this->logs[$name] = &Log::singleton('file', $this->log_dir . $name . ".log", $ident, $permissions, $level);
+    if($level == "") $level = $this->log_level;
+
+    $extras = array('mode' => $this->log_mode, 'lineFormat' => $this->log_line_format, 'timeFormat' => $this->log_time_format);
+
+    $this->logs[$name] = &Log::singleton('file', $this->log_dir . $name . ".log", $ident, $extras, $level);
   }
 
   /**
