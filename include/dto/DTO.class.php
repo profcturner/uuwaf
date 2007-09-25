@@ -282,7 +282,7 @@ class DTO
   */
   function _load_where($where_clause = "") 
   {
-    global $waf;
+    global $waf; 
 
     $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
@@ -292,7 +292,7 @@ class DTO
     {
       $sql = $con->prepare("SELECT * FROM `$class` $where_clause");
       $sql->execute();
-      $results_row = $con->fetch_array(PDO::FETCH_ASSOC);
+      $results_row = $sql->fetchAll(PDO::FETCH_ASSOC);
 
       foreach ($vars as $var)
       {
@@ -563,7 +563,7 @@ class DTO
       $sql = $con->prepare("SELECT * FROM `$class` WHERE `$field` = ? $order_by LIMIT $start, $limit;");
       $sql->execute(array($value));
   
-      while ($results_row = $con->fetch_array())
+      while ($results_row = $sql->fetchAll())
       {
         $classname = get_class($this);
         $object = new $classname;
