@@ -65,6 +65,8 @@ class WA extends Smarty
 
   var $base_dir;
 
+  var $default_log;
+
   function __construct($config)
   {
     $this->Smarty();
@@ -108,6 +110,8 @@ class WA extends Smarty
     if(empty($this->log_time_format)) $this->log_time_format = '%d %b %y %H:%M:%S';
     if(empty($this->sanity_checking)) $this->sanity_checking = true;
     if(empty($this->unattended)) $this->unattended = false;
+
+    $this->default_log = 'general';
 
     // Get the session going!
     session_save_path($this->session_dir);
@@ -208,14 +212,29 @@ class WA extends Smarty
   }
 
   /**
+  * Change the default log file
+  *
+  * @param string $ident the new log file to use by default
+  */
+  function set_default_log($ident)
+  {
+    $this->default_log = $ident;
+  }
+
+
+  /**
   * Log a message
   *
   * @param string $message the message to log
   * @param int the error level to use in the logging
   * @param string the name of the log file to use, defaults to general
   */
-  function log($message, $level = PEAR_LOG_NOTICE, $name = 'general')
+  function log($message, $level = PEAR_LOG_NOTICE, $name = '')
   {
+    if($name == '')
+    {
+       $name = $this->default_log;
+    }
     $this->logs[$name]->log($message, $level);
   }
 

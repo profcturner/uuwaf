@@ -467,6 +467,51 @@ class DTO
   }
 
 
+  /**
+  * Fetches all ids from the database, with optional restrictions
+  *
+  * Note that any supplied clauses need to be complete, that is, ensure the where_clause
+  * actually contains 'where'
+  *
+  * @param string $where_clause any where clause required
+  * @param string $order_by any 'order by' clause required
+  * @param integer $start how far into the list we should capture
+  * @param integer $limit the number of rows to capture
+  * @return array of objects
+  * @todo handle limit more elegantly
+  */
+  function _get_ids($where_clause="", $order_by="", $start=0, $limit=1000000) 
+  {
+    global $waf;
+    $con = $waf->connections[$this->_handle]->con;
+    $class = $this->_get_tablename();
+
+    if($waf->waf_debug)
+    {
+      $waf->log("$class::_get_ids() called [$where_clause:$order_by:$start:$limit]", PEAR_LOG_DEBUG, "waf_debug");
+    }
+
+    $object_array = array();
+    if (!($start >= 0)) $start = 0; 
+
+    try
+    {
+      $sql = $con->prepare("SELECT id FROM `$class` $where_clause $order_by LIMIT $start, $limit;");
+      $sql->execute();
+
+      while ($results_row = $sql->fetch(PDO::FETCH_ASSOC))
+      {
+        $id = $results_row["id"];
+        $object_array[] = $id;
+      }
+    }
+    catch (PDOException $e)
+    {
+      $this->_log_sql_error($e, $class, "_get_ids()");
+    }
+    return $object_array;	
+  }
+
 
   /**
   * @todo Gordon, can you document this?
