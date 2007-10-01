@@ -717,6 +717,15 @@ class DTO
   }
 
   /**
+  * Returns the class name
+  * @return the class name
+  */
+  function _get_classname() 
+  {
+    return get_class($this);
+  }
+
+  /**
   * Returns the field names used in the database
   *
   * @param boolean $include_id whether or not to include the id field
