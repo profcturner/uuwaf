@@ -291,8 +291,9 @@ class DTO
     try
     {
       $sql = $con->prepare("SELECT * FROM `$class` $where_clause");
+
       $sql->execute();
-      $results_row = $sql->fetchAll(PDO::FETCH_ASSOC);
+      $results_row = $sql->fetch(PDO::FETCH_ASSOC);
 
       foreach ($vars as $var)
       {
@@ -347,11 +348,12 @@ class DTO
       }
     }
     $sql_sets = substr($sql_sets,0,-1).";";
+
     try
     {
       $sql = $con->prepare($sql_insert.$sql_sets);
       $sql->execute($parameters);
-
+      
       $this->id = $con->lastInsertId();
     }
     catch (PDOException $e)
