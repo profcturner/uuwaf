@@ -41,6 +41,7 @@ abstract class DTO_Cache extends DTO
     {
       $this->_refresh("id");
     } 
+   
 	}
 
   public final function _load_by_field($field)
@@ -51,6 +52,7 @@ abstract class DTO_Cache extends DTO
     {
       $this->_refresh($field);
     } 
+    
   }
 	
 }	

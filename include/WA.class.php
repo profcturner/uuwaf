@@ -379,38 +379,48 @@ class WA extends Smarty
   function login_user($username, $password)
   {
     // Already in the session?
-    if(isset($_SESSION['waf']['user']))
+    if($_SESSION['waf']['user']['valid'] == true)
     {
       $this->set_log_ident($this->user['username']);
       return $_SESSION['waf']['user'];
     }
     // Try each authentication object in registration order
-    foreach($this->authentication_objects as $auth_object)
+    
+    // only if a username has been supplied
+
+    if (strlen($username) > 0)
     {
-      $test = $auth_object->waf_authenticate_user($username, $password);
-      if($test != FALSE)
+      foreach($this->authentication_objects as $auth_object)
       {
-        $this->user = $test;
-        $_SESSION['waf']['user'] = $this->user;
-        $this->set_log_ident($username);
-        if($this->waf_debug)
+        $test = $auth_object->waf_authenticate_user($username, $password);
+        if($test != FALSE)
         {
-          $this->log("authenticated successfully with " . get_class($auth_object), PEAR_LOG_DEBUG, 'waf_debug');
+          $this->user = $test;
+          $_SESSION['waf']['user'] = $this->user;
+          $this->set_log_ident($username);
+          if($this->waf_debug)
+          {
+            $this->log("authenticated successfully with " . get_class($auth_object), PEAR_LOG_DEBUG, 'waf_debug');
+          }
+          return($test);
         }
-        return($test);
-      }
-      else
-      {
-        if($this->waf_debug)
+        else
         {
-          $this->log("authentication failed with " . get_class($auth_object), PEAR_LOG_DEBUG, 'waf_debug');
+          if($this->waf_debug)
+          {
+            $this->log("authentication failed with " . get_class($auth_object), PEAR_LOG_DEBUG, 'waf_debug');
+          }
         }
       }
+      // All authentication mechanisms failed
+      $this->security_log("authentication failed for user: $username");
+      sleep(5); // slow down dictionary assaults
+      return (FALSE);
     }
-    // All authentication mechanisms failed
-    $this->security_log("authentication failed for user: $username");
-    sleep(5); // slow down dictionary assaults
-    return (FALSE);
+    else
+    {
+      return (FALSE);
+    }
   }
 
 
