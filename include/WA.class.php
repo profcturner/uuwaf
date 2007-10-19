@@ -386,41 +386,39 @@ class WA extends Smarty
     }
     // Try each authentication object in registration order
     
+    foreach($this->authentication_objects as $auth_object)
+    {
+      $test = $auth_object->waf_authenticate_user($username, $password);
+      if($test != FALSE)
+      {
+        $this->user = $test;
+        $_SESSION['waf']['user'] = $this->user;
+        $this->set_log_ident($username);
+        if($this->waf_debug)
+        {
+          $this->log("authenticated successfully with " . get_class($auth_object), PEAR_LOG_DEBUG, 'waf_debug');
+        }
+        return($test);
+      }
+      else
+      {
+        if($this->waf_debug)
+        {
+          $this->log("authentication failed with " . get_class($auth_object), PEAR_LOG_DEBUG, 'waf_debug');
+        }
+      }
+    }
+    
+    // All authentication mechanisms failed
+    $this->security_log("authentication failed for user: $username");
+ 
     // only if a username has been supplied
 
     if (strlen($username) > 0)
-    {
-      foreach($this->authentication_objects as $auth_object)
-      {
-        $test = $auth_object->waf_authenticate_user($username, $password);
-        if($test != FALSE)
-        {
-          $this->user = $test;
-          $_SESSION['waf']['user'] = $this->user;
-          $this->set_log_ident($username);
-          if($this->waf_debug)
-          {
-            $this->log("authenticated successfully with " . get_class($auth_object), PEAR_LOG_DEBUG, 'waf_debug');
-          }
-          return($test);
-        }
-        else
-        {
-          if($this->waf_debug)
-          {
-            $this->log("authentication failed with " . get_class($auth_object), PEAR_LOG_DEBUG, 'waf_debug');
-          }
-        }
-      }
-      // All authentication mechanisms failed
-      $this->security_log("authentication failed for user: $username");
       sleep(5); // slow down dictionary assaults
-      return (FALSE);
-    }
-    else
-    {
-      return (FALSE);
-    }
+    
+    return (FALSE);
+    
   }
 
 
