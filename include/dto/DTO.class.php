@@ -516,7 +516,14 @@ class DTO
 
 
   /**
-  * @todo Gordon, can you document this?
+  * obtains an array of a given field, indexed by the id field
+  *
+  * @param string $field the fieldname to return
+  * @param string $where_clause an optional where clause to restrict solution
+  * @param string $order_by an optional field to govern returned order
+  * @param string $start optional start
+  * @param string $limit optional limit
+  * @return an array of values for a given field indexed by the id field
   */
   function _get_id_and_field($field, $where_clause="", $order_by="", $start=0, $limit=MAX_ROWS_RETURNED) 
   {
@@ -532,13 +539,13 @@ class DTO
     {
       $sql = $con->prepare("SELECT * FROM `$class` $where_clause $order_by LIMIT $start, $limit;");
       $sql->execute();
-  
+
       while ($results_row = $sql->fetch(PDO::FETCH_ASSOC))
       {
         $obj_id = $results_row["id"];
         $value = $results_row["$field"];
-  
-        $object_array = preserved_merge_array($object_array, array($obj_id => $value));	
+
+        $object_array = $this->preserved_merge_array($object_array, array($obj_id => $value));	
       }
     }
     catch (PDOException $e)
@@ -609,14 +616,14 @@ class DTO
     {
       $sql = $con->prepare("SELECT * FROM `$class` WHERE `$field` = ? $order_by LIMIT $start, $limit;");
       $sql->execute(array($value));
-  
+
       while ($results_row = $sql->fetchAll())
       {
         $classname = get_class($this);
         $object = new $classname;
         $object->id = $results_row["id"];
         $object->_load_by_id();
-  
+
         array_push($object_array, $object);	
       }
     }
@@ -784,185 +791,218 @@ class DTO
     return $class_string;
   }
 
-/**
- * This method returns TRUE or FALSE, depending on whether the value validates agains the type. 
- * The field_defs can now include a validation element, that will be used instead of the type validation.
- *
- * TODO Need to add a required element to the field_def
- *
- * @param string $field
- * @param string $value
- *
- * @return bool
- *
- *
- */
-
-  function _validate_field($field, $value) 
+  /**
+  * This method returns TRUE or FALSE, depending on whether the value validates agains the type. 
+  * The field_defs can now include a validation element, that will be used instead of the type validation.
+  *
+  * @param string $field the field to validate (variable in the model)
+  * @param string $value the inbound value of that field
+  *
+  * @return bool indicator of successful validation (or not)
+  */
+  function _validate_field($field, $value)
   {
     $field_defs = $this->get_field_defs();
 
+    // Mandatory fields get checked first
     if ($field_defs[$field]['mandatory'] == true)
     {
       if (strlen($value) == 0) return "Mandatory Field";
     }
 
+    // The fields with custom validation regexps
     if (!empty($field_defs[$field]['validation']))
     {
-      if (!ereg($field_defs[$field]['validation'], $value)) return "Validation failed using this pattern ".$field_defs[$field]['validation'];
+      if (!ereg($field_defs[$field]['validation'], $value))
+      {
+        // Check for a custom error message
+        if(!empty($field_defs[$field]['validation_message'])) return $field_defs[$field]['validation_message'];
+        else return "Validation failed using this pattern ".$field_defs[$field]['validation'];
+      }
     }
 
+    // Ok, down to type based validation
     $type = $field_defs[$field]['type'];
 
     $valid = "";
 
     switch ($type) 
     {
-      case "text" :   
-        if ($field_defs[$field]['maxsize']) {
-            $maxsize = $field_defs[$field]['maxsize'];
-        } else {
-            $maxsize = $field_defs[$field]['size'];
+      case "text" :
+        if ($field_defs[$field]['maxsize'])
+        {
+          $maxsize = $field_defs[$field]['maxsize'];
         }
-        if (strlen($value) > $maxsize) {
-            $valid = "The text is too long.";
+        else
+        {
+          $maxsize = $field_defs[$field]['size'];
+        }
+        if (strlen($value) > $maxsize)
+        {
+          $valid = "The text is too long.";
         }
         break;
-      case "textarea" :   
-        if ($field_defs[$field]['maxsize']) {
-            $maxsize = $field_defs[$field]['maxsize'];
-        } else {
-            $maxsize = $field_defs[$field]['rowsize']*$field_defs[$field]['colsize'];
+      case "textarea" :
+        if ($field_defs[$field]['maxsize'])
+        {
+          $maxsize = $field_defs[$field]['maxsize'];
         }
-        if (strlen($value) > $maxsize) {
-            $valid = "The text is too long.";
+        else
+        {
+          $maxsize = $field_defs[$field]['rowsize']*$field_defs[$field]['colsize'];
+        }
+        if (strlen($value) > $maxsize)
+        {
+          $valid = "The text is too long.";
         }
         break;
       case "email" :
-        if (strlen($value) > 0 and !ereg("^[^@ ]+@[^@ ]+\.[^@ \.]+$", $value)) {
-            $valid = "Email is invalid.";
+        if (strlen($value) > 0 and !ereg("^[^@ ]+@[^@ ]+\.[^@ \.]+$", $value))
+        {
+          $valid = "Email is invalid.";
         }
         break;
       case "postcode" :
-        if (!eregi('^[A-Z]{1,2}[0-9]{1,2}[[:space:]][0-9]{1}[A-Z]{2}$', $value) and strlen($value) > 0) {
-            $valid = "Postcode is invalid.";
+        if (!eregi('^[A-Z]{1,2}[0-9]{1,2}[[:space:]][0-9]{1}[A-Z]{2}$', $value) and strlen($value) > 0)
+        {
+          $valid = "Postcode is invalid.";
         }
         break;
       case "numeric" :
-        if (!is_numeric($value) and strlen($value) > 0) {
-            $valid = "The value is not numeric.";
+        if (!is_numeric($value) and strlen($value) > 0)
+        {
+          $valid = "The value is not numeric.";
         }
         break;
       case "url" :
-        if (strlen($value) > 0 and !eregi("^(((ht|f)tp(s?))\:\/\/)?(www.|[a-zA-Z].)[a-zA-Z0-9\-\.]+\.(com|edu|gov|mil|net|org|biz|info|name|museum|us|ca|uk)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\;\?\'\\\+&%\$#\=~_\-]+))*$", $value)) {
-            $valid = "URL is invalid.";
+        if (strlen($value) > 0 and !eregi("^(((ht|f)tp(s?))\:\/\/)?(www.|[a-zA-Z].)[a-zA-Z0-9\-\.]+\.(com|edu|gov|mil|net|org|biz|info|name|museum|us|ca|uk)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\;\?\'\\\+&%\$#\=~_\-]+))*$", $value))
+        {
+          $valid = "URL is invalid.";
         }
         break;
       case "currency" :
-        if (strlen($value) > 0 and !eregi("^[0-9]*[.]*[0-9]{0,2}$", $value)) {
-            $valid = "Currency is not valid.";
+        if (strlen($value) > 0 and !eregi("^[0-9]*[.]*[0-9]{0,2}$", $value))
+        {
+          $valid = "Currency is not valid.";
         }
         break;
       case "date" :
-        if (strlen($value) > 0 and !ereg("(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[012])-([0-9]{4})", $value)) {
-            $valid = "Date is invalid.";
+        if (strlen($value) > 0 and !ereg("(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[012])-([0-9]{4})", $value))
+        {
+          $valid = "Date is invalid.";
+        }
+        break;
+      case "isodate" :
+        if (strlen($value) > 0 and !ereg("([0-9]{4})-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])", $value))
+        {
+          $valid = "Date is invalid.";
         }
         break;
       }
     return $valid;
   }
-
+  /**
+  * validates all inbound variables
+  *
+  * @param array $nvp_array all the variables defined in the model layer inbound
+  * @return an array of validation errors, an empty array on success
+  */
   function _validate($nvp_array) 
   {
+    global $waf;
 
-      global $waf;
-      $validation_messages = array();
-      $fields = array_keys($nvp_array);
-      foreach ($fields as $field) {
-          if (strlen($this->_validate_field($field, $nvp_array[$field])) > 0) 
-          {
-              $message = $this->_validate_field($field, $nvp_array[$field]);
-  
-              if ($waf->validation_image_fail) {
-                $validation_messages[$field][0] =  "<img src='".$waf->validation_image_fail."' title='$message' />";
-              } else {
-                $validation_messages[$field][0] =  "<small title='$message' style='cursor:pointer'>?<small>";
-              }
-              
-              $validation_messages[$field][1] = $message;
-          }
+    $field_defs = $this->get_field_defs();
+    $validation_messages = array();
+    $fields = array_keys($nvp_array);
+    foreach ($fields as $field)
+    {
+      if (strlen($this->_validate_field($field, $nvp_array[$field])) > 0)
+      {
+        $message = $this->_validate_field($field, $nvp_array[$field]);
+        if ($waf->validation_image_fail)
+        {
+          $validation_messages[$field][0] =  "<img src='".$waf->validation_image_fail."' title='$message' />";
+        }
+        else
+        {
+          $validation_messages[$field][0] =  "<small title='$message' style='cursor:pointer'>?<small>";
+        }
+        $validation_messages[$field][1] = $message;
+        // Get any nice title
+        $title = $field_defs[$field]['title'];
+        if(empty($title)) $title = $field;
+        $validation_messages[$field][2] = $title;
       }
-      //$this->_get_fieldnames($include_id
-      //print_r ($validation_messages); exit;
-      return $validation_messages;
-
     }
+    return $validation_messages;
+  }
 
-/**
- * This method returns the validation indicator that is displayed to the user via the UI. 
- * It is normal the text OK or ? or images.
- *
- * @param string $field
- * @param string $value
- *
- * @uses DTO::_validate_field()
- *
- */
-
-  function _validation_response($field, $value) 
+  /**
+  * This method returns the validation indicator that is displayed to the user via the UI. 
+  * It is normal the text OK or ? or images.
+  *
+  * @param string $field
+  * @param string $value
+  *
+  * @uses DTO::_validate_field()
+  *
+  */
+  function _validation_response($field, $value)
   {
-
     global $waf;
     // override this is the model if you like
 
     $valid = $this->_validate_field($field, $value);
 
-    if (strlen($valid) == 0) {
-            if ($waf->validation_image_ok) {
-                return "<img src='".$waf->validation_image_ok."' title='Format is fine.' />";
-            } else {
-                return "<small title='format is fine' style='cursor:pointer'>Ok</small>";
-            }
-        } else {
-            if ($waf->validation_image_fail) {
-                return "<img src='".$waf->validation_image_fail."' title='$valid' />";
-            } else {
-                return "<small title='$valid' style='cursor:pointer'>?<small>";
-            }
-        }
+    if (strlen($valid) == 0)
+    {
+      if ($waf->validation_image_ok)
+      {
+        return "<img src='".$waf->validation_image_ok."' title='Format is fine.' />";
+      }
+      else
+      {
+        return "<small title='format is fine' style='cursor:pointer'>Ok</small>";
+      }
     }
+    else
+    {
+      if ($waf->validation_image_fail)
+      {
+        return "<img src='".$waf->validation_image_fail."' title='$valid' />";
+      }
+      else
+      {
+        return "<small title='$valid' style='cursor:pointer'>?<small>";
+      }
+    }
+  }
 
+  /**
+  * this function tries to remove any harmfull characters from a string (possibly pasted from Word etc), before db insertion
+  */
+  function make_safe($text)
+  {
+    $text = preg_replace("/(\cM)/", " ", $text);
+    $text = preg_replace("/(\c])/", " ", $text);
+    $text = str_replace("\r\n", "\n", $text);
+    $text = str_replace("\x0B", " ", $text);
+    $text = str_replace('"', " ", $text);
+    $text = explode("\n", $text);
+    $text = implode("\n", $text);
+    $text = trim($text);
+    return($text);
+  }
 
+  function preserved_merge_array( $newArray, $otherArray )
+  {
+    foreach( $otherArray as $key => $value)
+    {
+      if ( !is_array($newArray[$key]) ) $newArray[$key] = array();
+      if ( is_array($value) ) $newArray[$key] = preserved_merge_array( $newArray[$key], $value );
+      else $newArray[$key] = $value;
+    }
+    return $newArray;
+  }
 }
-
-  function make_safe($text)	
-  {
-
-	// this function tries to remove any harmfull characters from a string (possibly pasted from Word etc), before db insertion
-
-	$text = preg_replace("/(\cM)/", " ", $text);
-	$text = preg_replace("/(\c])/", " ", $text);
-	$text = str_replace("\r\n", "\n", $text);
-	$text = str_replace("\x0B", " ", $text);
-	$text = str_replace('"', " ", $text);
-	$text = explode("\n", $text);
-	$text = implode("\n", $text);
-	//$text = addslashes(trim($text));
-	return($text);
-
-  } 
-
-  function preserved_merge_array( $newArray, $otherArray ) 
-  {
-		
-	   foreach( $otherArray as $key => $value)
-	   {
-	       if ( !is_array($newArray[$key]) ) $newArray[$key] = array();
-	       if ( is_array($value) ) $newArray[$key] = preserved_merge_array( $newArray[$key], $value );
-	       else $newArray[$key] = $value;
-	   }
-	  
-	   return $newArray;
-	}
-
 ?>
