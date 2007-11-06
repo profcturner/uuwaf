@@ -802,7 +802,7 @@ class DTO
   {
     $field_defs = $this->get_field_defs();
 
-    if ($field_defs[$field]['mandatory'] == 'true')
+    if ($field_defs[$field]['mandatory'] == true)
     {
       if (strlen($value) == 0) return "Mandatory Field";
     }
