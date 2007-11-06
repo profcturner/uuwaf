@@ -800,71 +800,75 @@ class DTO
 
   function _validate_field($field, $value) 
   {
-    if (empty($this->_field_defs[$field]['validation']))
+    $field_defs = $this->get_field_defs();
+
+    if ($field_defs[$field]['mandatory'] == 'true')
     {
-      $type = $this->_field_defs[$field]['type'];
-      $valid = true;
+      if (strlen($value) == 0) return false;
+    }
 
-      switch ($type) {
+    if (!empty($field_defs[$field]['validation']))
+    {
+      if (!ereg($field_defs[$field]['validation'], $value)) return false;
+    }
 
+    $type = $field_defs[$field]['type'];
+
+    $valid = true;
+
+    switch ($type) 
+    {
       case "text" :   
-          if ($this->_field_defs[$field]['maxsize']) {
-              $maxsize = $this->_field_defs[$field]['maxsize'];
-          } else {
-              $maxsize = $this->_field_defs[$field]['size'];
-          }
-          if (strlen($value) > $maxsize) {
-              $valid = false;
-          }
-          break;
+        if ($field_defs[$field]['maxsize']) {
+            $maxsize = $field_defs[$field]['maxsize'];
+        } else {
+            $maxsize = $field_defs[$field]['size'];
+        }
+        if (strlen($value) > $maxsize) {
+            $valid = false;
+        }
+        break;
       case "textarea" :   
-          if ($this->_field_defs[$field]['maxsize']) {
-              $maxsize = $this->_field_defs[$field]['maxsize'];
-          } else {
-              $maxsize = $this->_field_defs[$field]['rowsize']*$this->_field_defs[$field]['colsize'];
-          }
-          if (strlen($value) > $maxsize) {
-              $valid = false;
-          }
-          break;
+        if ($field_defs[$field]['maxsize']) {
+            $maxsize = $field_defs[$field]['maxsize'];
+        } else {
+            $maxsize = $field_defs[$field]['rowsize']*$field_defs[$field]['colsize'];
+        }
+        if (strlen($value) > $maxsize) {
+            $valid = false;
+        }
+        break;
       case "email" :
-          if (strlen($value) > 0 and !ereg("^[^@ ]+@[^@ ]+\.[^@ \.]+$", $value)) {
-              $valid = false;
-          }
-          break;
+        if (strlen($value) > 0 and !ereg("^[^@ ]+@[^@ ]+\.[^@ \.]+$", $value)) {
+            $valid = false;
+        }
+        break;
       case "postcode" :
-          if (!eregi('^[A-Z]{1,2}[0-9]{1,2}[[:space:]][0-9]{1}[A-Z]{2}$', $value) and strlen($value) > 0) {
-              $valid = false;
-          }
-          break;
+        if (!eregi('^[A-Z]{1,2}[0-9]{1,2}[[:space:]][0-9]{1}[A-Z]{2}$', $value) and strlen($value) > 0) {
+            $valid = false;
+        }
+        break;
       case "numeric" :
-          if (!is_numeric($value) and strlen($value) > 0) {
-              $valid = false;
-          }
-          break;
+        if (!is_numeric($value) and strlen($value) > 0) {
+            $valid = false;
+        }
+        break;
       case "url" :
-          if (strlen($value) > 0 and !eregi("^(((ht|f)tp(s?))\:\/\/)?(www.|[a-zA-Z].)[a-zA-Z0-9\-\.]+\.(com|edu|gov|mil|net|org|biz|info|name|museum|us|ca|uk)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\;\?\'\\\+&%\$#\=~_\-]+))*$", $value)) {
-              $valid = false;
-          }
-          break;
+        if (strlen($value) > 0 and !eregi("^(((ht|f)tp(s?))\:\/\/)?(www.|[a-zA-Z].)[a-zA-Z0-9\-\.]+\.(com|edu|gov|mil|net|org|biz|info|name|museum|us|ca|uk)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\;\?\'\\\+&%\$#\=~_\-]+))*$", $value)) {
+            $valid = false;
+        }
+        break;
       case "currency" :
-          if (strlen($value) > 0 and !eregi("^[0-9]*[.]*[0-9]{0,2}$", $value)) {
-              $valid = false;
-          }
-          break;
+        if (strlen($value) > 0 and !eregi("^[0-9]*[.]*[0-9]{0,2}$", $value)) {
+            $valid = false;
+        }
+        break;
       case "date" :
-          if (strlen($value) > 0 and !ereg("(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[012])-([0-9]{4})", $value)) {
-              $valid = false;
-          }
-          break;
+        if (strlen($value) > 0 and !ereg("(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[012])-([0-9]{4})", $value)) {
+            $valid = false;
+        }
+        break;
       }
-    }
-    else
-    {
-      if (!ereg($this->_field_defs[$field]['validation'], $value)) {
-        $valid = false;
-      }
-    }
     return $valid;
   }
 
