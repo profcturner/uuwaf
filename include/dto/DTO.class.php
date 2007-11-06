@@ -804,17 +804,17 @@ class DTO
 
     if ($field_defs[$field]['mandatory'] == 'true')
     {
-      if (strlen($value) == 0) return false;
+      if (strlen($value) == 0) return "Mandatory Field";
     }
 
     if (!empty($field_defs[$field]['validation']))
     {
-      if (!ereg($field_defs[$field]['validation'], $value)) return false;
+      if (!ereg($field_defs[$field]['validation'], $value)) return "Validation failed using this pattern ".$field_defs[$field]['validation'];
     }
 
     $type = $field_defs[$field]['type'];
 
-    $valid = true;
+    $valid = "";
 
     switch ($type) 
     {
@@ -825,7 +825,7 @@ class DTO
             $maxsize = $field_defs[$field]['size'];
         }
         if (strlen($value) > $maxsize) {
-            $valid = false;
+            $valid = "The text is too long.";
         }
         break;
       case "textarea" :   
@@ -835,37 +835,37 @@ class DTO
             $maxsize = $field_defs[$field]['rowsize']*$field_defs[$field]['colsize'];
         }
         if (strlen($value) > $maxsize) {
-            $valid = false;
+            $valid = "The text is too long.";
         }
         break;
       case "email" :
         if (strlen($value) > 0 and !ereg("^[^@ ]+@[^@ ]+\.[^@ \.]+$", $value)) {
-            $valid = false;
+            $valid = "Email is invalid.";
         }
         break;
       case "postcode" :
         if (!eregi('^[A-Z]{1,2}[0-9]{1,2}[[:space:]][0-9]{1}[A-Z]{2}$', $value) and strlen($value) > 0) {
-            $valid = false;
+            $valid = "Postcode is invalid.";
         }
         break;
       case "numeric" :
         if (!is_numeric($value) and strlen($value) > 0) {
-            $valid = false;
+            $valid = "The value is not numeric.";
         }
         break;
       case "url" :
         if (strlen($value) > 0 and !eregi("^(((ht|f)tp(s?))\:\/\/)?(www.|[a-zA-Z].)[a-zA-Z0-9\-\.]+\.(com|edu|gov|mil|net|org|biz|info|name|museum|us|ca|uk)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\;\?\'\\\+&%\$#\=~_\-]+))*$", $value)) {
-            $valid = false;
+            $valid = "URL is invalid.";
         }
         break;
       case "currency" :
         if (strlen($value) > 0 and !eregi("^[0-9]*[.]*[0-9]{0,2}$", $value)) {
-            $valid = false;
+            $valid = "Currency is not valid.";
         }
         break;
       case "date" :
         if (strlen($value) > 0 and !ereg("(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[012])-([0-9]{4})", $value)) {
-            $valid = false;
+            $valid = "Date is invalid.";
         }
         break;
       }
@@ -875,17 +875,26 @@ class DTO
   function _validate($nvp_array) 
   {
 
-        $validation_messages = array();
-        $fields = array_keys($nvp_array);
-        foreach ($fields as $field) {
-            if (!$this->_validate_field($field, $nvp_array[$field])) {
-                $message = $this->_validate_field($field, $nvp_array[$field]);
-                $validation_messages = array_merge($validation_messages, array($field => $message));
-            }
-        }
-        //$this->_get_fieldnames($include_id
-        //print_r ($validation_messages); exit;
-        return $validation_messages;
+      global $waf;
+      $validation_messages = array();
+      $fields = array_keys($nvp_array);
+      foreach ($fields as $field) {
+          if (strlen($this->_validate_field($field, $nvp_array[$field])) > 0) 
+          {
+              $message = $this->_validate_field($field, $nvp_array[$field]);
+  
+              if ($waf->validation_image_fail) {
+                $validation_messages[$field][0] =  "<img src='".$waf->validation_image_fail."' title='$message' />";
+              } else {
+                $validation_messages[$field][0] =  "<small title='$message' style='cursor:pointer'>?<small>";
+              }
+              
+              $validation_messages[$field][1] = $message;
+          }
+      }
+      //$this->_get_fieldnames($include_id
+      //print_r ($validation_messages); exit;
+      return $validation_messages;
 
     }
 
@@ -908,17 +917,17 @@ class DTO
 
     $valid = $this->_validate_field($field, $value);
 
-    if ($valid) {
+    if (strlen($valid) == 0) {
             if ($waf->validation_image_ok) {
-                return "<img src='".$waf->validation_image_ok."' title='format is fine' />";
+                return "<img src='".$waf->validation_image_ok."' title='Format is fine.' />";
             } else {
                 return "<small title='format is fine' style='cursor:pointer'>Ok</small>";
             }
         } else {
             if ($waf->validation_image_fail) {
-                return "<img src='".$waf->validation_image_fail."' title='invalid format' />";
+                return "<img src='".$waf->validation_image_fail."' title='$valid' />";
             } else {
-                return "<small title='invalid format' style='cursor:pointer'>?<small>";
+                return "<small title='$valid' style='cursor:pointer'>?<small>";
             }
         }
     }
