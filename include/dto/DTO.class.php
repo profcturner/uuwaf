@@ -807,7 +807,7 @@ class DTO
     // Mandatory fields get checked first
     if ($field_defs[$field]['mandatory'] == true)
     {
-      if (strlen($value) == 0) return "Mandatory Field";
+      if (strlen(trim($value)) == 0) return "Mandatory Field";
     }
 
     // The fields with custom validation regexps
