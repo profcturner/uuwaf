@@ -33,32 +33,44 @@ devdoc:
 	mkdir -p ../phpdoc/
 	phpdoc -d html -d include -t ../phpdoc/ -dn UUWAF --title "UUWAF Development Documentation"
 
-#
-# Currently contains commands for making with Debian
-#
+# These defaults are for debian
+# default place for configuration
+etc=/etc/
+# default place for install will be this path followed by /share/uuwaf
+prefix=/usr
+# default place for html content
+www=/www
+# default name for webuser
+webuser=www-data
 
-debetc=/etc
-debprefix=/usr
-debwww=/var/www
+fedora-config:
+	etc=/etc
+	prefix=/usr
+	www=/www
+	webuser=/www-data
 
-debs: deb-uuwaf
+fedora-install: fedora-config install
 
-deb-uuwaf:
+debian-install: install
+
+install: uuwaf-core
+
+uuwaf-core:
 	# Make main directory and copy in contents
-	mkdir -p ${debprefix}/share/uuwaf
-	cp -rf html ${debprefix}/share/uuwaf
-	cp -rf include ${debprefix}/share/uuwaf
-	chown -R www-data:root ${debprefix}/share/uuwaf/
-	chmod -R o-rwx ${debprefix}/share/uuwaf/
-	mkdir -p ${debprefix}/share/doc/uuwaf
+	mkdir -p ${prefix}/share/uuwaf
+	cp -rf html ${prefix}/share/uuwaf
+	cp -rf include ${prefix}/share/uuwaf
+	chown -R ${webuser}:root ${prefix}/share/uuwaf/
+	chmod -R o-rwx ${prefix}/share/uuwaf/
+	mkdir -p ${prefix}/share/doc/uuwaf
 
-deb-uuwaf-etc: 
+uuwaf-etc: 
 	mkdir -p ${debetc}/uuwaf
 	cp include/config.php.debian ${debetc}/uuwaf/config.php
 	cp etc/apache2.conf ${debetc}/uuwaf/apache2.conf
 
 
-deb-uuwaf-doc:
+uuwaf-doc:
 	mkdir -p $(debprefix)/share/doc/uuwaf-doc
 	cp -rf docs ${debprefix}/share/doc/uuwaf-doc
 

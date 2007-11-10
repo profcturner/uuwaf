@@ -6,13 +6,13 @@
 
 
 // Internal includes
-//require_once("WA.Utility.class.php");
 require_once("WA.data_connection.class.php");
 
 // 3rd Party includes
 require_once("Smarty.class.php");
 
 // The Web Application Framework uses logging that is global in scope (at least for now)
+// This is the PEAR Log module
 require_once('Log.php');
 
 /**
@@ -47,6 +47,10 @@ require_once('Log.php');
 */
 class WA extends Smarty 
 {
+  /** The current version of UUWAF
+  * @var string
+  */
+  var $waf_version = "1.0.0";
 
   /** An array of authentication objects
   * @var array
@@ -63,8 +67,14 @@ class WA extends Smarty
   */
   var $user;
 
+  /** The base directory for the installed application
+  * @var string
+  */
   var $base_dir;
 
+  /** the handle of the log file to be used if nothing is specified
+  * @var string
+  */
   var $default_log;
 
   function __construct($config)
@@ -159,7 +169,11 @@ class WA extends Smarty
   */
   function environment_sanity_check()
   {
-    if (version_compare(phpversion(), "5.1.0", "<="))
+    if (version_compare($this->waf_version, $this->required_waf_version, "<"))
+    {
+       $this->halt("WAF version is " . $this->waf_version . " but " . $this->title . " requires " . $this->required_waf_version);
+    }
+    if (version_compare(phpversion(), "5.1.0", "<"))
     {
        $this->halt("WAF requires at least PHP 5.1");
     }
@@ -385,7 +399,7 @@ class WA extends Smarty
       return $_SESSION['waf']['user'];
     }
     // Try each authentication object in registration order
-    
+
     foreach($this->authentication_objects as $auth_object)
     {
       $test = $auth_object->waf_authenticate_user($username, $password);
@@ -408,22 +422,22 @@ class WA extends Smarty
         }
       }
     }
-    
+
     // All authentication mechanisms failed
     $this->security_log("authentication failed for user: $username");
- 
+
     // only if a username has been supplied
 
     if (strlen($username) > 0)
       sleep(5); // slow down dictionary assaults
-    
+
     return (FALSE);
-    
+
   }
 
 
   /** Logs out the current user
-  * 
+  *
   * Reset Session, $this and log_ident
   */
   function logout_user()
@@ -437,11 +451,31 @@ class WA extends Smarty
   /**
   * A function to halt execution
   *
+  * Often, the function will attempt to look up a full, potentially localised
+  * message from the language files if $message takes the form foo:bar:etc
+  * and tries to call any user defined error function. It falls back to a
+  * simple die.
+  *
   * @todo die gracefully here... and possibly terminate the page draw in the application if possible
   */
   function halt($message="")
   {
-    die($message);
+    $function = $this->app_error_function;
+
+    if(!strlen($function) || !function_exists($function))
+    {
+      die($message);
+    }
+
+    if(preg_match("/([a-z0-9_-]+:)+([a-z0-9_-]+)/i", $message))
+    {
+      if (file_exists($this->config_dir."lang_".$this->language.".conf"))
+        $this->config_load("lang_".$this->language.".conf", $message);
+      if (file_exists($this->config_dir."local_".$this->language.".conf"))
+        $this->config_load("local_".$this->language.".conf", $message);
+    }
+    $this->assign("error_message", $message);
+    $function($this);
   }
 
 
@@ -636,7 +670,6 @@ class WA extends Smarty
           if (isset($_REQUEST[$name]))
           {
             return($_REQUEST[$name]);
-            //return addslashes(str_replace("\"", "'", "$_REQUEST[$name]"));
           }
           else
           {
@@ -709,7 +742,7 @@ class WA extends Smarty
       $this->config_load("lang_".$this->language.".conf", $section);
     if (file_exists($this->config_dir."local_".$this->language.".conf"))
       $this->config_load("local_".$this->language.".conf", $section);
-      
+
     if (strlen($content_tpl) > 0) 
     {
       $content = $this->fetch($content_tpl);

@@ -57,7 +57,7 @@ install: build
 
 	# Add here commands to install the package into debian/uuwaf.
 	#$(MAKE) DESTDIR=$(CURDIR)/debian/uuwaf install
-	$(MAKE) debs debwww=$(CURDIR)/debian/uuwaf/var/www debprefix=$(CURDIR)/debian/uuwaf/usr debetc=$(CURDIR)/debian/uuwaf/etc
+	$(MAKE) install www=$(CURDIR)/debian/uuwaf/var/www prefix=$(CURDIR)/debian/uuwaf/usr etc=$(CURDIR)/debian/uuwaf/etc
 
 
 # Build architecture-independent files here.
