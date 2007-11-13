@@ -109,7 +109,7 @@ class DTO
   * @return the number of objects counted
   */
   function _count($where_clause="") 
-  {    
+  {
     global $waf;
 
     $con = $waf->connections[$this->_handle]->con;
@@ -184,6 +184,7 @@ class DTO
 
   /**
   * Loads an entry from the database whose id is stored internally in the class
+  * @return boolean true on success, false otherwise
   */
   function _load_by_id() 
   {
@@ -208,12 +209,15 @@ class DTO
     {
       $this->_log_sql_error($e, $class, "_load_by_id()");
     }
+    if(isset($results_row['id'])) return true;
+    else return false;
   }
 
   /**
   * Loads an entry from the database whose given field is equal to its internally stored value
   *
   * @param string $field the name of the field to check against
+  * @return boolean true on success, false otherwise
   */
   function _load_by_field($field) 
   {
@@ -238,6 +242,8 @@ class DTO
     {
       $this->_log_sql_error($e, $class, "_load_by_field()");
     }
+    if(isset($results_row['id'])) return true;
+    else return false;
   }
 
 
@@ -246,6 +252,7 @@ class DTO
   *
   * @param string $field the name of the field to check against
   * @param string $value the value the field must match
+  * @return boolean true on success, false otherwise
   */
   function _load_by_field_value($field, $value) 
   {
@@ -269,16 +276,18 @@ class DTO
     {
       $this->_log_sql_error($e, $class, "_load_by_field_value()");
     }
+    if(isset($results_row['id'])) return true;
+    else return false;
   }
 
   /**
   * Loads a single object from the database for an arbitrary where clause
   *
   * Note that if the clause causes several objects to be returned that only the first match
-  * will be loaded into the object.
+  * will be loaded into the object. <b>do not use unvalidated input</b>.
   *
   * @param string $where_clause the full 'where' clause, that <strong>must</strong> contain 'where' itself if needed
-  * @todo this looks like a prime candidate for injection, we need to explore this... is this widely used?
+  * @return boolean true on success, false otherwise
   */
   function _load_where($where_clause = "") 
   {
@@ -304,6 +313,8 @@ class DTO
     {
       $this->_log_sql_error($e, $class, "_load_where()");
     }
+    if(isset($results_row['id'])) return true;
+    else return false;
   }
 
 
