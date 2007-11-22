@@ -433,7 +433,40 @@ class DTO
     }
   }
 
+  /**
+  * get one or more fields from the first matching row with a certain condition
+  *
+  * @param mixed $fields either an array of fields to fetch or a single column name
+  * @return mixed either the individual field value, or an array if multiple fields were specified
+  */
+  function _get_fields($fields, $where_clause="")
+  {
+    global $waf;
+    $con = $waf->connections[$this->_handle]->con;
+    $class = $this->_get_tablename();
 
+    if($waf->waf_debug)
+    {
+      $waf->log("$class::_get_fields() called [$fields:$where_clause]", PEAR_LOG_DEBUG, "waf_debug");
+    }
+
+    if(is_array($fields)) $field_sql = implode(",", $fields);
+    else $field_sql = "`$fields`";
+
+    try
+    {
+      $sql = $con->prepare("SELECT $field_sql FROM `$class` $where_clause");
+      $sql->execute();
+
+      $results_row = $sql->fetch(PDO::FETCH_ASSOC);
+    }
+    catch (PDOException $e)
+    {
+      $this->_log_sql_error($e, $class, "_get_all()");
+    }
+    if(is_array($fields)) return($results_row);
+    else return $results_row[$fields];
+  }
 
   /**
   * Fetches all objects from the database, with optional restrictions

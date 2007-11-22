@@ -332,7 +332,8 @@ class WA extends Smarty
 
     $objects_added = 0;
 
-    $this->log("Loading from authentication directory $directory", PEAR_LOG_DEBUG, "debug");
+    if($this->waf_debug)
+      $this->log("Loading from authentication directory $directory", PEAR_LOG_DEBUG, "waf_debug");
 
     $authentication_files = array();
     try
@@ -361,7 +362,8 @@ class WA extends Smarty
         $classname = $authentication_file[2];
         $filename = $authentication_file['filename'];
 
-        $this->log("Loading $filename", PEAR_LOG_DEBUG, "debug");
+        if($this->waf_debug)
+          $this->log("Loading $filename", PEAR_LOG_DEBUG, "waf_debug");
         require_once($directory . "/" . $filename);
 
         // Register the object
