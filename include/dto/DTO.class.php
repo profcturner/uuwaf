@@ -587,7 +587,14 @@ class DTO
       while ($results_row = $sql->fetch(PDO::FETCH_ASSOC))
       {
         $obj_id = $results_row["id"];
-        $value = $results_row["$field"];
+        if (substr($field,0,1) == '_')
+				{
+					$object = new $class;
+					$obj = $object->load_by_id($obj_id);
+					$value = $obj->$field;
+				}
+				else
+					$value = $results_row["$field"];
 
         $object_array = $this->preserved_merge_array($object_array, array($obj_id => $value));	
       }
@@ -851,7 +858,14 @@ class DTO
     // Mandatory fields get checked first
     if ($field_defs[$field]['mandatory'] == true)
     {
-      if (strlen(trim($value)) == 0) return "Mandatory Field";
+			if ($field_defs[$field]['type'] == 'file') 
+			{
+				if ($_FILES[$field]['error'] > 0) return "File error ".$_FILES[$field]['error'];
+			}
+			else
+			{
+      	if (strlen(trim($value)) == 0) return "Mandatory Field";
+			}
     }
 
     // The fields with custom validation regexps
