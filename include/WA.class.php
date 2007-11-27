@@ -478,6 +478,7 @@ class WA extends Smarty
     }
     $this->assign("error_message", $message);
     $function($this);
+    die();
   }
 
 
