@@ -576,6 +576,11 @@ class DTO
     $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
 
+		if($waf->waf_debug)
+    {
+      $waf->log("$class::_get_id_and_field() called [$field:$where_clause:$order_by:$start:$limit]", PEAR_LOG_DEBUG, "waf_debug");
+    }
+		
     $object_array = array(0 => '');
     if (!($start >= 0)) $start = 0; 
 
