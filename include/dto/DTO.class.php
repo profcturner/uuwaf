@@ -37,7 +37,7 @@ class DTO
     if(!count($waf->connections))
     {
       $waf->log("No database connections registered", PEAR_LOG_EMERG, 'panic');
-      WA::halt("No database connections registered");
+      WA::halt("error:database:no_connections");
     }
     if($waf->waf_debug)
     {
@@ -60,7 +60,7 @@ class DTO
       {
         $error_text = $e->getMessage();
         $waf->log("Database connection failure ($error_text)", PEAR_LOG_EMERG, 'panic');
-        $waf->halt("Could not connect database...");
+        $waf->halt("error:database:connection_failure");
       }
     /*}
     else
