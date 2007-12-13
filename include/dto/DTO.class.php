@@ -867,6 +867,10 @@ class DTO
 			{
 				if ($_FILES[$field]['error'] > 0) return "File error ".$_FILES[$field]['error'];
 			}
+			elseif ($field_defs[$field]['type'] == 'lookup')
+			{
+				if ($value == 0) return "Mandatory Field";
+			}
 			else
 			{
       	if (strlen(trim($value)) == 0) return "Mandatory Field";
