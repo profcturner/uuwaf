@@ -128,7 +128,7 @@ class WA extends Smarty
     session_start();
 
     // Check for debugging only on some IPs
-    if(is_array($this->debug_only_on_IP))
+    if(is_array($this->debug_only_on_IP) && $this->debugging)
     {
       if(in_array($_SERVER['REMOTE_ADDR'], $this->debug_only_on_IP))
       {
