@@ -14,7 +14,7 @@
 *
 */
 
-if (!defined(MAX_ROWS_RETURNED)) define("MAX_ROWS_RETURNED", 100);
+if (!defined(MAX_ROWS_RETURNED)) define("MAX_ROWS_RETURNED", 10000);
 
 class DTO 
 {
@@ -311,7 +311,7 @@ class DTO
     }
     catch (PDOException $e)
     {
-      $this->_log_sql_error($e, $class, "_load_where()");
+      $this->_log_sql_error($e, $class, "_load_where($where_clause)");
     }
     if(isset($results_row['id'])) return true;
     else return false;
@@ -364,7 +364,7 @@ class DTO
     {
       $sql = $con->prepare($sql_insert.$sql_sets);
       $sql->execute($parameters);
-      
+
       $this->id = $con->lastInsertId();
     }
     catch (PDOException $e)
@@ -768,7 +768,7 @@ class DTO
     }
     catch (PDOException $e)
     {
-      $this->_log_sql_error($e, $class, "_remove_where()");
+      $this->_log_sql_error($e, $class, "_remove_where($where_clause)");
     }
   }
 
