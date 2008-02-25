@@ -394,6 +394,7 @@ class WA extends Smarty
   */
   function login_user($username, $password)
   {
+    $this->set_log_ident("NonAuth:" . $username);
     // Already in the session?
     if($_SESSION['waf']['user']['valid'] == true)
     {
