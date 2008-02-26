@@ -28,6 +28,7 @@ class Cookie
   */
   function read($cookie_name)
   {
+    global $waf;
     $cookie = array();
 
     if($waf->waf_debug)
