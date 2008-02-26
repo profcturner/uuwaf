@@ -1,9 +1,10 @@
 <?php
 /**
+* Main WAF Application Framework
+*
 * @license http://opensource.org/licenses/gpl-license.php GNU Public License v2
 * @package UUWAF
 */
-
 
 // Internal includes
 require_once("WA.data_connection.class.php");
@@ -11,8 +12,7 @@ require_once("WA.data_connection.class.php");
 // 3rd Party includes
 require_once("Smarty.class.php");
 
-// The Web Application Framework uses logging that is global in scope (at least for now)
-// This is the PEAR Log module
+// The Web Application Framework uses logging from the PEAR Log module
 require_once('Log.php');
 
 /**
