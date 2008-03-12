@@ -3,7 +3,7 @@
 /**
 * Cookie Handling for UUWAF
 *
-* @license http://opensource.org/licenses/gpl-license.php GNU Public License v2
+* @license http://opensource.org/licenses/lgpl-2.1.php Lesser GNU Public License v2
 * @package UUWAF
 */
 

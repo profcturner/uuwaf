@@ -64,15 +64,13 @@ uuwaf-core:
 	chmod -R o-rwx ${prefix}/share/uuwaf/
 	mkdir -p ${prefix}/share/doc/uuwaf
 
-uuwaf-etc: 
-	mkdir -p ${debetc}/uuwaf
-	cp include/config.php.debian ${debetc}/uuwaf/config.php
-	cp etc/apache2.conf ${debetc}/uuwaf/apache2.conf
-
 
 uuwaf-doc:
 	mkdir -p $(debprefix)/share/doc/uuwaf-doc
+	mkdir -p $(debprefix)/share/doc/uuwaf-doc/api/
 	cp -rf docs ${debprefix}/share/doc/uuwaf-doc
+	phpdoc -d include -t $(debprefix)/share/doc/uuwaf-doc/api/ -dn UUWAF --title "UUWAF Development Documentation"
+
 
 build_debs:
 	dpkg-buildpackage -rfakeroot

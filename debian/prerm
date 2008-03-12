@@ -1,5 +1,5 @@
 #!/bin/sh
-# prerm script for opus
+# prerm script for uuwaf
 #
 # see: dh_installdeb(1)
 

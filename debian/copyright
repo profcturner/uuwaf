@@ -1,11 +1,11 @@
 This package was created by one of the upstream authors: Dr Colin Turner
 
-Copyright: 2001-2007 University of Ulster
+Copyright: 2001-2008 University of Ulster
 
 License:
 
-UUWAF is released under the GPL (Gnu Public License) v2. See the LICENSE file in the
+UUWAF is released under the LGPL (Gnu Lesser General Public License) v2.1. See the LICENSE file in the
 top directory for details.
 
-The Debian packaging is (C) 2007, colin <c.turner@ulster.ac.uk> and
+The Debian packaging is (C) 2007-2008, colin <c.turner@ulster.ac.uk> and
 is licensed under the GPL v2, see `/usr/share/common-licenses/GPL-2'.

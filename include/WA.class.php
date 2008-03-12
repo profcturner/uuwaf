@@ -2,7 +2,7 @@
 /**
 * Main WAF Application Framework
 *
-* @license http://opensource.org/licenses/gpl-license.php GNU Public License v2
+* @license http://opensource.org/licenses/lgpl-2.1.php Lesser GNU Public License v2
 * @package UUWAF
 */
 
@@ -107,11 +107,12 @@ class WA extends Smarty
     if(empty($this->debugging)) $this->debugging = False;
     if(empty($this->language)) $this->language = "en";
     if(empty($this->base_dir)) $this->base_dir = "/usr/share/$app_text_name/";
+    if(empty($this->var_dir)) $this->var_dir = "/var/lib/$app_text_name/";
     if(empty($this->template_dir)) $this->template_dir = $this->base_dir . "templates/";
-    if(empty($this->compile_dir)) $this->compile_dir = $this->base_dir . "templates_c/";
-    if(empty($this->cache_dir)) $this->cache_dir = $this->base_dir . "templates_cache/";
+    if(empty($this->compile_dir)) $this->compile_dir = $this->var_dir . "templates_c/";
+    if(empty($this->cache_dir)) $this->cache_dir = $this->var_dir . "templates_cache/";
     if(empty($this->config_dir)) $this->config_dir = $this->base_dir . "configs/";
-    if(empty($this->session_dir)) $this->session_dir = $this->base_dir . "sessions/";
+    if(empty($this->session_dir)) $this->session_dir = $this->var_dir . "sessions/";
     if(empty($this->log_dir)) $this->log_dir = "/var/log/$app_text_name/";
     if(empty($this->log_level)) $this->log_level = Log::UPTO(PEAR_LOG_INFO);
     if(empty($this->panic_on_sql_error)) $this->panic_on_sql_error = true;
@@ -632,14 +633,14 @@ class WA extends Smarty
   /**
   * This method returns user input from a GET or POST or the SESSION
   *
-  * The method always returns GET and POSt values over SESSION stored values, and rewrites the SESSION stored 
+  * The method always returns GET and POST values over SESSION stored values, and rewrites the SESSION stored 
   * value in this case
   *
   * @param string $name The name of the variable to return
   * @param bool $session A flag to indicate if input should be returned from session and persisted in session
   *
   */
-  function request($name, $session=False) 
+  function request($name, $session = false)
   {
     if (key_exists($name, $_REQUEST) || key_exists($name, $_SESSION)) 
     {
@@ -649,11 +650,6 @@ class WA extends Smarty
         {
           if (isset($_REQUEST[$name])) 
           {
-            // CT: I suspect addition of slashes was only needed for the database
-            // this is no longer the case because of PDO escaping, and probably
-            // isn't needed anywhere else, commenting this while we test that.
-            //$_SESSION[$name] = addslashes(str_replace("\"", "'", "$_REQUEST[$name]"));
-            //return addslashes(str_replace("\"", "'", "$_REQUEST[$name]"));
             $_SESSION[$name] = $_REQUEST[$name];
             return($_REQUEST[$name]);
           }
@@ -695,47 +691,59 @@ class WA extends Smarty
   /**
   * @todo Gordon, do we need this function as well as the one above?
   */
-	function goto_page($user, $default="home", $error="error") 
+  function goto_page($user, $default="home", $error="error") 
   {
-		$page = WA::request("function", False);
+    $page = WA::request("function", False);
 
-		if ( function_exists($page) ) {
-			$page($this, $user);
-		} elseif (function_exists($default)) {
-			$default($this, $user);
-		} elseif (function_exists($error)) {
-			$error($this, $user);
-		} else {
-			error($this, $user);
+    if ( function_exists($page) )
+    {
+      $page($this, $user);
+    }
+    elseif (function_exists($default))
+    {
+      $default($this, $user);
+    }
+    elseif (function_exists($error))
+    {
+      $error($this, $user);
+    }
+    else
+    {
+      error($this, $user);
       // CT: Should this call $this->halt() as a last resort?
-		}
-	}
+    }
+  }
 
-	function inject($array_var) {
+  /**
+  * assigns numerous variables from an array to the smarty object
+  *
+  * this loops through an array and assigns the values to the WA object, using the key as the 
+  * variable name and the value is the array element value
+  *
+  * @param array the array to decompose and add to the smarty object
+  */
+  function inject($array_var)
+  {
+    $keys = array_keys($array_var);
 
-	// this loops through an array and assigns the values to the WA object, using the key as the 
-	// template name and the value is the array element value
+    foreach ($keys as $key)
+    {
+      $this->assign("$key", $array_var[$key]);
+    }
+  }
 
-		$keys = array_keys($array_var);
+  function inject_object($object, $array_var)
+  {
+    $obj = new $object;
+    $keys = array_keys($array_var);
+    foreach ($keys as $key)
+    {
+      $obj->$key = $array_var[$key];
+    }
+    $this->assign("object", $obj);
+  }
 
-		foreach ($keys as $key) {
-			$this->assign("$key", $array_var[$key]);
-		}
-	}
-
-	function inject_object($object, $array_var) {
-		
-		$obj = new $object;
-		$keys = array_keys($array_var);
-		foreach ($keys as $key) {
-
-			$obj->$key = $array_var[$key];
-
-		}
-		$this->assign("object", $obj);
-	}
-
-/**
+  /**
   * Display has been extended to load the default smarty configuration files
   */
   function display($template, $section="", $content_tpl="") 

@@ -2,7 +2,6 @@ UUWAF
 
 This is the University of Ulster Web Application Framework
 
-It is currently a work in progress supporting the development
-of version 4 of OPUS and the PDSystem
+It is a required underpinning for OPUS, the PDSystem and similar programs.
 
 http://foss.ulster.ac.uk/projects/uuwaf

@@ -1,5 +1,5 @@
 #!/bin/sh
-# postinst script for opus
+# postinst script for uuwaf
 #
 # see: dh_installdeb(1)
 
