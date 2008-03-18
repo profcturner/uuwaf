@@ -21,3 +21,9 @@ Description: API documentation for University of Ulster Web Application Framewor
  UUWAF is a PHP framework for simplifying the creation of web applications.
  .
  This is the API documentation.
+
+Package: uuwaf-preferences
+Architecture: all
+Depends: uuwaf, dbconfig-common
+Description: University of Ulster Web Application Framework Preference System
+  This provides a common preferences database for software based on UUWAF

@@ -66,10 +66,9 @@ uuwaf-core:
 
 
 uuwaf-doc:
-	mkdir -p $(debprefix)/share/doc/uuwaf-doc
-	mkdir -p $(debprefix)/share/doc/uuwaf-doc/api/
-	cp -rf docs ${debprefix}/share/doc/uuwaf-doc
-	phpdoc -d include -t $(debprefix)/share/doc/uuwaf-doc/api/ -dn UUWAF --title "UUWAF Development Documentation"
+	mkdir -p $(prefix)/share/doc/uuwaf-doc
+	mkdir -p $(prefix)/share/doc/uuwaf-doc/api/
+	phpdoc -d include -t $(prefix)/share/doc/uuwaf-doc/api/ -dn UUWAF --title "UUWAF Development Documentation"
 
 
 build_debs:
