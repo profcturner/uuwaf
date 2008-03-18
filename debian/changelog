@@ -1,3 +1,10 @@
+uuwaf (1.0.0-2) unstable; urgency=low
+
+  * significant fixes to packaging, ready for initial release (closes:
+    471561)
+
+ -- Colin Turner <c.turner@ulster.ac.uk>  Tue, 18 Mar 2008 23:17:34 +0000
+
 uuwaf (1.0.0-1) unstable; urgency=low
 
   * Initial packaging
