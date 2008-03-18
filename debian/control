@@ -15,6 +15,7 @@ Description: University of Ulster Web Application Framework
  This is a PHP framework for simplifying the creation of web applications.
 
 Package: uuwaf-doc
+Section: doc
 Architecture: all
 Depends: 
 Description: API documentation for University of Ulster Web Application Framework
@@ -26,4 +27,4 @@ Package: uuwaf-preferences
 Architecture: all
 Depends: uuwaf, dbconfig-common
 Description: University of Ulster Web Application Framework Preference System
-  This provides a common preferences database for software based on UUWAF
+ This provides a common preferences database for software based on UUWAF
