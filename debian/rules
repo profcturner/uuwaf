@@ -43,7 +43,7 @@ clean:
 	rm -f build-stamp configure-stamp
 
 	# Add here commands to clean up after the build process.
-	-$(MAKE) clean
+	$(MAKE) clean
 
 	dh_clean 
 
@@ -59,16 +59,11 @@ install: build
 	# API documentation
 	$(MAKE) uuwaf-doc www=$(CURDIR)/debian/uuwaf/var/www prefix=$(CURDIR)/debian/uuwaf-doc/usr etc=$(CURDIR)/debian/uuwaf/etc
 	# Preferences
-	pwd
 	mkdir -p debian/uuwaf-preferences/usr/share/dbconfig-common/data/uuwaf-preferences/install
 	cp ../../trunk/sql_patch/preferences-schema.sql debian/uuwaf-preferences/usr/share/dbconfig-common/data/uuwaf-preferences/install/mysql
 
 # Build architecture-independent files here.
 binary-indep: build install
-# We have nothing to do by default.
-
-# Build architecture-dependent files here.
-binary-arch: build install
 	dh_testdir
 	dh_testroot
 	dh_installchangelogs 
@@ -98,5 +93,5 @@ binary-arch: build install
 	dh_md5sums
 	dh_builddeb
 
-binary: binary-indep binary-arch
+binary: binary-indep
 .PHONY: build clean binary-indep binary-arch binary install configure

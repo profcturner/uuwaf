@@ -58,7 +58,6 @@ install: uuwaf-core
 uuwaf-core:
 	# Make main directory and copy in contents
 	mkdir -p ${prefix}/share/uuwaf
-	cp -rf html ${prefix}/share/uuwaf
 	cp -rf include ${prefix}/share/uuwaf
 	chown -R ${webuser}:root ${prefix}/share/uuwaf/
 	chmod -R o-rwx ${prefix}/share/uuwaf/
