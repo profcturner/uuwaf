@@ -6,7 +6,7 @@
 * @license http://opensource.org/licenses/lgpl-2.1.php Lesser GNU Public License v2
 * @package UUWAF
 */
-
+require_once("UUWAF.class.php");
 /**
 * Cookie Handling for UUWAF
 *
@@ -28,7 +28,7 @@ class Cookie
   */
   function read($cookie_name)
   {
-    global $waf;
+    $waf = UUWAF::get_instance();
     $cookie = array();
 
     if($waf->waf_debug)
@@ -94,7 +94,7 @@ class Cookie
   */
   function write($cookie_name, $cookie_value, $cookie_expire="", $cookie_path="/", $cookie_host="")
   {
-    global $waf;
+    $waf = UUWAF::get_instance();
 
     if(empty($cookie_host)) $cookie_host = $waf->cookie_host;
 
@@ -136,7 +136,7 @@ class Cookie
   */
   private function hash($value)
   {
-    global $waf;
+    $waf = UUWAF::get_instance();
 
     return md5($waf->cookie_secret.$value);
   }

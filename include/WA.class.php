@@ -27,22 +27,21 @@ require_once('Log.php');
 *   <li>Logging</li>
 *   <li>Database handling</li>
 * </ul>
-* The object instantiated <strong>must</strong> be called "waf" to correctly.
+* Normally, a singleton UUWAF class is used to construct and access this.
 *
 * To instantiate the object the code should be something like
 * <code>
 * $config = array();
 * $config['title'] = "Application Name";
 * // many more options, examine __construct()
-* $waf = new WA($config);
-* // Note that to work correctly, the object *must* be called $waf.
-* echo "hello world
+* $waf = UUWAF::get_instance($config);
 * </code>
 *
 * @author Colin Turner <c.turner@ulster.ac.uk>
 * @author Gordon Crawford <g.crawford@ulster.ac.uk>
-* @version 1.0
+* @version 1.1
 * @package UUWAF
+* @see UUWAF.class.php
 *
 */
 class WA extends Smarty 
@@ -106,6 +105,7 @@ class WA extends Smarty
     if(empty($this->caching)) $this->caching = False;
     if(empty($this->debugging)) $this->debugging = False;
     if(empty($this->language)) $this->language = "en";
+    if(empty($this->uuwaf_dir)) $this->uuwaf_dir = "/usr/share/uuwaf/";
     if(empty($this->base_dir)) $this->base_dir = "/usr/share/$app_text_name/";
     if(empty($this->var_dir)) $this->var_dir = "/var/lib/$app_text_name/";
     if(empty($this->template_dir)) $this->template_dir = $this->base_dir . "templates/";
