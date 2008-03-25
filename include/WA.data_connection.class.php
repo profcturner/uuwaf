@@ -53,7 +53,7 @@ class wa_data_connection
     $this->password = $password;
     $this->extra = $extra;
 
-    $this->con = False;
+    $this->con = false;
   }
 }
 

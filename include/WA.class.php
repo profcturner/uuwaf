@@ -27,22 +27,21 @@ require_once('Log.php');
 *   <li>Logging</li>
 *   <li>Database handling</li>
 * </ul>
-* The object instantiated <strong>must</strong> be called "waf" to correctly.
+* Normally, a singleton UUWAF class is used to construct and access this.
 *
 * To instantiate the object the code should be something like
 * <code>
 * $config = array();
 * $config['title'] = "Application Name";
 * // many more options, examine __construct()
-* $waf = new WA($config);
-* // Note that to work correctly, the object *must* be called $waf.
-* echo "hello world
+* $waf = UUWAF::get_instance($config);
 * </code>
 *
 * @author Colin Turner <c.turner@ulster.ac.uk>
 * @author Gordon Crawford <g.crawford@ulster.ac.uk>
-* @version 1.0
+* @version 1.1
 * @package UUWAF
+* @see UUWAF.class.php
 *
 */
 class WA extends Smarty 
@@ -102,25 +101,32 @@ class WA extends Smarty
     $app_text_name = strtolower($this->title);
     $app_text_name = str_replace(" ", "_", $app_text_name);
 
+    // Important paths
+    if(empty($this->uuwaf_dir)) $this->uuwaf_dir = "/usr/share/uuwaf/";
+    if(empty($this->base_dir)) $this->base_dir = "/usr/share/$app_text_name/";
+    if(empty($this->var_dir)) $this->var_dir = "/var/lib/$app_text_name/";
+    if(empty($this->session_dir)) $this->session_dir = $this->var_dir . "sessions/";
+    // Smarty specific
     if(empty($this->compile_check)) $this->compile_check = True;
     if(empty($this->caching)) $this->caching = False;
     if(empty($this->debugging)) $this->debugging = False;
-    if(empty($this->language)) $this->language = "en";
-    if(empty($this->base_dir)) $this->base_dir = "/usr/share/$app_text_name/";
-    if(empty($this->var_dir)) $this->var_dir = "/var/lib/$app_text_name/";
     if(empty($this->template_dir)) $this->template_dir = $this->base_dir . "templates/";
     if(empty($this->compile_dir)) $this->compile_dir = $this->var_dir . "templates_c/";
     if(empty($this->cache_dir)) $this->cache_dir = $this->var_dir . "templates_cache/";
     if(empty($this->config_dir)) $this->config_dir = $this->base_dir . "configs/";
-    if(empty($this->session_dir)) $this->session_dir = $this->var_dir . "sessions/";
+    // Logging
     if(empty($this->log_dir)) $this->log_dir = "/var/log/$app_text_name/";
     if(empty($this->log_level)) $this->log_level = Log::UPTO(PEAR_LOG_INFO);
     if(empty($this->panic_on_sql_error)) $this->panic_on_sql_error = true;
     if(empty($this->log_mode)) $this->log_mode = '0600';
     if(empty($this->log_line_format)) $this->log_line_format = '%1$s [%2$s] %4$s';
     if(empty($this->log_time_format)) $this->log_time_format = '%d %b %y %H:%M:%S';
+    // Miscellaneous
+    if(empty($this->language)) $this->language = "en";
     if(empty($this->sanity_checking)) $this->sanity_checking = true;
     if(empty($this->unattended)) $this->unattended = false;
+    // Database retrieval settings
+    if(empty($this->rows_per_page)) $this->rows_per_page = 20;
 
     $this->default_log = 'general';
 

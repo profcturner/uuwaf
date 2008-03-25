@@ -3,7 +3,7 @@
 * Handles database transactions without having data in the class
 * @package UUWAF
 */
-
+require_once("UUWAF.class.php");
 /**
 *
 * Handles database transactions without having data in the class
@@ -31,7 +31,7 @@ class DTO_NoData
   */
   function __construct($handle = 'default')
   {
-    global $waf;
+    $waf = UUWAF::get_instance();
 
     if(!count($waf->connections))
     {
@@ -82,7 +82,7 @@ class DTO_NoData
   */
   function _log_sql_error(PDOException $e, $class, $function="")
   {
-    global $waf;
+    $waf = UUWAF::get_instance();
 
     $error_text = $e->getMessage();
     if(!empty($function)) $function = "::$function ";
