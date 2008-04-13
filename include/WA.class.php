@@ -34,7 +34,7 @@ require_once('Log.php');
 * $config = array();
 * $config['title'] = "Application Name";
 * // many more options, examine __construct()
-* $waf = UUWAF::get_instance($config);
+* $waf = new WA($config);
 * </code>
 *
 * @author Colin Turner <c.turner@ulster.ac.uk>
