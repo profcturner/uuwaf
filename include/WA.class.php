@@ -49,7 +49,7 @@ class WA extends Smarty
   /** The current version of UUWAF
   * @var string
   */
-  var $waf_version = "1.0.0";
+  var $waf_version = "1.0.1";
 
   /** An array of authentication objects
   * @var array
