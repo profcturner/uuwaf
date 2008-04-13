@@ -6,7 +6,7 @@
 * @license http://opensource.org/licenses/lgpl-2.1.php Lesser GNU Public License v2
 * @package UUWAF
 */
-require_once("UUWAF.class.php");
+
 /**
 * Cookie Handling for UUWAF
 *
