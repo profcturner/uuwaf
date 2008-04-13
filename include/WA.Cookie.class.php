@@ -28,7 +28,7 @@ class Cookie
   */
   function read($cookie_name)
   {
-    $waf = UUWAF::get_instance();
+    global $waf;
     $cookie = array();
 
     if($waf->waf_debug)
@@ -94,7 +94,7 @@ class Cookie
   */
   function write($cookie_name, $cookie_value, $cookie_expire="", $cookie_path="/", $cookie_host="")
   {
-    $waf = UUWAF::get_instance();
+    global $waf;
 
     if(empty($cookie_host)) $cookie_host = $waf->cookie_host;
 
@@ -136,7 +136,7 @@ class Cookie
   */
   private function hash($value)
   {
-    $waf = UUWAF::get_instance();
+    global $waf;
 
     return md5($waf->cookie_secret.$value);
   }
