@@ -31,7 +31,7 @@ class DTO_NoData
   */
   function __construct($handle = 'default')
   {
-    $waf = UUWAF::get_instance();
+    $waf = &UUWAF::get_instance();
 
     if(!count($waf->connections))
     {
@@ -82,7 +82,7 @@ class DTO_NoData
   */
   function _log_sql_error(PDOException $e, $class, $function="")
   {
-    $waf = UUWAF::get_instance();
+    $waf = &UUWAF::get_instance();
 
     $error_text = $e->getMessage();
     if(!empty($function)) $function = "::$function ";

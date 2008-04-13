@@ -21,7 +21,7 @@ class UUWAF
 {
   static private $instance;
 
-  static public function get_instance($config = false)
+  static public function &get_instance($config = false)
   {
     if(!self::$instance)
     {

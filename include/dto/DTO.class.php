@@ -35,7 +35,7 @@ class DTO
   */
   function __construct($handle = 'default')
   {
-    $waf = UUWAF::get_instance();
+    $waf = &UUWAF::get_instance();
 
     if(!count($waf->connections))
     {
@@ -86,7 +86,7 @@ class DTO
   */
   function _log_sql_error(PDOException $e, $class, $function="")
   {
-    $waf = UUWAF::get_instance();
+    $waf = &UUWAF::get_instance();
 
     $error_text = $e->getMessage();
     if(!empty($function)) $function = "::$function ";
@@ -112,7 +112,7 @@ class DTO
   */
   function _count($where_clause="") 
   {
-    $waf = UUWAF::get_instance();
+    $waf = &UUWAF::get_instance();
 
     $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
@@ -140,7 +140,7 @@ class DTO
   */
   function _exists()
   {
-    $waf = UUWAF::get_instance();
+    $waf = &UUWAF::get_instance();
 
     $con = $waf->connections[$this->_handle]->con; 
     $class = $this->_get_tablename();
@@ -165,7 +165,7 @@ class DTO
   */
   function _field_value_exists($field, $value) 
   {
-    $waf = UUWAF::get_instance();
+    $waf = &UUWAF::get_instance();
 
     $con = $waf->connections[$this->_handle]->con; 
     $class = $this->_get_tablename();
@@ -190,7 +190,7 @@ class DTO
   */
   function _load_by_id() 
   {
-    $waf = UUWAF::get_instance();
+    $waf = &UUWAF::get_instance();
 
     $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
@@ -223,7 +223,7 @@ class DTO
   */
   function _load_by_field($field) 
   {
-    $waf = UUWAF::get_instance();
+    $waf = &UUWAF::get_instance();
 
     $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
@@ -258,7 +258,7 @@ class DTO
   */
   function _load_by_field_value($field, $value) 
   {
-    $waf = UUWAF::get_instance();
+    $waf = &UUWAF::get_instance();
 
     $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
@@ -293,7 +293,7 @@ class DTO
   */
   function _load_where($where_clause = "") 
   {
-    $waf = UUWAF::get_instance(); 
+    $waf = &UUWAF::get_instance(); 
 
     $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
@@ -334,7 +334,7 @@ class DTO
   */
   function _insert($fields="empty") 
   {
-    $waf = UUWAF::get_instance();
+    $waf = &UUWAF::get_instance();
 
     $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
@@ -389,7 +389,7 @@ class DTO
   */
   function _update($fields="empty")  
   {
-    $waf = UUWAF::get_instance();
+    $waf = &UUWAF::get_instance();
 
     $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
@@ -443,7 +443,7 @@ class DTO
   */
   function _get_fields($fields, $where_clause="")
   {
-    $waf = UUWAF::get_instance();
+    $waf = &UUWAF::get_instance();
     $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
 
@@ -484,7 +484,7 @@ class DTO
   */
   function _get_all($where_clause="", $order_by="", $start=0, $limit=MAX_ROWS_RETURNED, $parse = False) 
   {
-    $waf = UUWAF::get_instance();
+    $waf = &UUWAF::get_instance();
     $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
 
@@ -530,7 +530,7 @@ class DTO
   */
   function _get_ids($where_clause="", $order_by="", $start=0, $limit=1000000) 
   {
-    $waf = UUWAF::get_instance();
+    $waf = &UUWAF::get_instance();
     $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
 
@@ -573,7 +573,7 @@ class DTO
   */
   function _get_id_and_field($field, $where_clause="", $order_by="", $start=0, $limit=MAX_ROWS_RETURNED) 
   {
-    $waf = UUWAF::get_instance();
+    $waf = &UUWAF::get_instance();
 
     $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
@@ -619,7 +619,7 @@ class DTO
   */
   function _get_all_by_user_id($order_by="", $start=0, $limit=MAX_ROWS_RETURNED) 
   {
-    $waf = UUWAF::get_instance();
+    $waf = &UUWAF::get_instance();
 
     $con = $waf->connections[$this->_handle]->con;	
     $class = $this->_get_tablename();
@@ -662,7 +662,7 @@ class DTO
   */
   function _get_all_by_field_value($field, $value, $order_by="", $start=0, $limit=MAX_ROWS_RETURNED) 
   {
-    $waf = UUWAF::get_instance();
+    $waf = &UUWAF::get_instance();
 
     $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
@@ -704,7 +704,7 @@ class DTO
   */
   function _get_all_like_field_value($field, $value, $order_by="", $start=0, $limit=MAX_ROWS_RETURNED) 
   {
-    $waf = UUWAF::get_instance();
+    $waf = &UUWAF::get_instance();
 
     $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
@@ -758,7 +758,7 @@ class DTO
   */
   function _remove_where($where_clause="WHERE id=0") 
   {
-    $waf = UUWAF::get_instance();
+    $waf = &UUWAF::get_instance();
 
     $con = $waf->connections[$this->_handle]->con;
     $class = $this->_get_tablename();
@@ -944,7 +944,7 @@ class DTO
         }
         break;
       case "url" :
-        if (strlen($value) > 0 and !eregi("^(((ht|f)tp(s?))\:\/\/)?(www.|[a-zA-Z].)[a-zA-Z0-9\-\.]+\.([a-zA-Z]+)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\;\?\'\\\+&%\$#\=~_\-]+))*$", $value))
+        if (strlen($value) > 0 and !eregi("^(((ht|f)tp(s?))\:\/\/)?(www.|[a-zA-Z\-].)[a-zA-Z0-9\-\.]+\.([a-zA-Z]+)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\;\?\'\\\+&%\$#\=~_\-]+))*$", $value))
         {
           $valid = "URL is invalid.";
         }
@@ -978,7 +978,7 @@ class DTO
   */
   function _validate($nvp_array) 
   {
-    $waf = UUWAF::get_instance();
+    $waf = &UUWAF::get_instance();
 
     $field_defs = $this->get_field_defs();
     $validation_messages = array();
@@ -1018,7 +1018,7 @@ class DTO
   */
   function _validation_response($field, $value)
   {
-    $waf = UUWAF::get_instance();
+    $waf = &UUWAF::get_instance();
     // override this is the model if you like
 
     $valid = $this->_validate_field($field, $value);
