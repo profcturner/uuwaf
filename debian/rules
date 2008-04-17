@@ -60,7 +60,8 @@ install: build
 	$(MAKE) uuwaf-doc www=$(CURDIR)/debian/uuwaf/var/www prefix=$(CURDIR)/debian/uuwaf-doc/usr etc=$(CURDIR)/debian/uuwaf/etc
 	# Preferences
 	mkdir -p debian/uuwaf-preferences/usr/share/dbconfig-common/data/uuwaf-preferences/install
-	cp ../../trunk/sql_patch/preferences-schema.sql debian/uuwaf-preferences/usr/share/dbconfig-common/data/uuwaf-preferences/install/mysql
+	pwd
+	cp ../../1.0.1/sql_patch/preferences-schema.sql debian/uuwaf-preferences/usr/share/dbconfig-common/data/uuwaf-preferences/install/mysql
 
 # Build architecture-independent files here.
 binary-indep: build install
