@@ -1,3 +1,12 @@
+uuwaf (1.0.1-1) unstable; urgency=low
+
+  * new upstream version, fixes URL regexp
+
+  * packaging changed to depend upon php-log rather than php-pear, since
+    the former is all that is now needed, and it simplifies post install.
+
+ -- Colin Turner <c.turner@ulster.ac.uk>  Sat, 19 Apr 2008 21:49:04 +0100
+
 uuwaf (1.0.0-2) unstable; urgency=low
 
   * significant fixes to packaging, ready for initial release (closes:
