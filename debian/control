@@ -10,7 +10,8 @@ Standards-Version: 3.7.3
 
 Package: uuwaf
 Architecture: all
-Depends: apache2, php5, php5-cli, libapache2-mod-php5, php5-mysql, php5-ldap, smarty, php-log, debconf, mysql-client, mysql-server
+Depends: apache2 | httpd, libapache2-mod-php5 | libapache-mod-php5 | php5 | php5-cgi, php5-cli, php5-mysql, php5-ldap, smarty, php-log, debconf, mysql-client
+Recommends: mysql-server
 Description: University of Ulster Web Application Framework
  uuwaf is a lightweight PHP framework for creating web applications.
  It handles basic flow control in controllers database connection, data
@@ -20,16 +21,6 @@ Description: University of Ulster Web Application Framework
  This early version is not suitable for standalone usage, but rather it
  provides shared code used by applications written at the University of
  Ulster, particularly opus and the pdsystem.
-
-Package: uuwaf-doc
-Section: doc
-Architecture: all
-Depends: 
-Description: API documentation for University of Ulster Web Application Framework
- uuwaf is a lightweight PHP framework used by several applications created
- at the University of Ulster. This is the API documentation for the framework,
- but you will only need this if you plan to make changes to an application
- built upon the framework.
 
 Package: uuwaf-preferences
 Architecture: all

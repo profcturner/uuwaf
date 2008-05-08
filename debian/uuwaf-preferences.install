@@ -1,1 +1,1 @@
-sql_patch/preferences-schema.sql usr/share/dbconfig-common/data/uuwaf-preferences/install/mysql
+sql_patch/preferences-schema.sql usr/share/dbconfig-common/data/uuwaf-preferences/install
