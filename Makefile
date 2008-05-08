@@ -16,7 +16,6 @@ tar:
 	# is very debian specific right now
 	rm -rf `find ../tarballs/uuwaf-$(rel) -type d -name ".svn"`
 	rm -rf `find ../tarballs/uuwaf-$(rel) -name "*~"`
-	rm -rf ../tarballs/uuwaf-${rel}/Makefile
 	rm -rf ../tarballs/uuwaf-$(rel)/debian
 	# actually perform the gzip
 	cd ../tarballs && tar cfz uuwaf_$(rel).orig.tar.gz uuwaf-$(rel)
