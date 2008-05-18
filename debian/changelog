@@ -1,21 +1,29 @@
+uuwaf (1.0.1-3) unstable; urgency=low
+
+  * Watch file added
+  * Added reference to copyright link in Debian in copyright notice
+  * Fixed the VCS-SVN field to contain only a URL
+  * Removed dependency on php5-cli, and changed php5-ldap to recommends
+
+ -- Colin Turner <c.turner@ulster.ac.uk>  Sun, 18 May 2008 00:21:18 +0100
+
 uuwaf (1.0.1-2) unstable; urgency=low
 
-  * improved descriptions for packages
+  * Improved descriptions for packages
 
  -- Colin Turner <c.turner@ulster.ac.uk>  Thu, 24 Apr 2008 20:44:57 +0100
 
 uuwaf (1.0.1-1) unstable; urgency=low
 
-  * new upstream version, fixes URL regexp
-
-  * packaging changed to depend upon php-log rather than php-pear, since
+  * New upstream version, fixes URL regexp
+  * Packaging changed to depend upon php-log rather than php-pear, since
     the former is all that is now needed, and it simplifies post install.
 
  -- Colin Turner <c.turner@ulster.ac.uk>  Sat, 19 Apr 2008 21:49:04 +0100
 
 uuwaf (1.0.0-2) unstable; urgency=low
 
-  * significant fixes to packaging, ready for initial release (closes:
+  * Significant fixes to packaging, ready for initial release (closes:
     471561)
 
  -- Colin Turner <c.turner@ulster.ac.uk>  Tue, 18 Mar 2008 23:17:34 +0000
