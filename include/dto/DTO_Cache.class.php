@@ -4,7 +4,10 @@
  * The Data Transfer Object Cache extends the DTO root class, all dto cacehed classes are 
  * extended from this.
  * 
- * 
+ * @author Gordon Crawford <g.crawford@ulster.ac.uk>
+ * @author Colin Turner <c.turner@ulster.ac.uk>
+ * @license http://opensource.org/licenses/lgpl-2.1.php Lesser GNU Public License v2
+ * @package UUWAF 
  *
  */
 
