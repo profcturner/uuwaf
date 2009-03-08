@@ -131,6 +131,9 @@ class WA extends Smarty
     $this->default_log = 'general';
 
     // Get the session going!
+    if(!empty($this->gc_probability)) ini_set('session.gc_probability', $this->gc_probability);
+    if(!empty($this->gc_divisor)) ini_set('session.gc_divisor', $this->gc_divisor);
+    if(!empty($this->gc_maxlifetime)) ini_set('session.gc_maxlifetime', $this->gc_maxlifetime);
     session_save_path($this->session_dir);
     session_start();
 
