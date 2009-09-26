@@ -49,7 +49,7 @@ class WA extends Smarty
   /** The current version of UUWAF
   * @var string
   */
-  var $waf_version = "1.1.0";
+  var $waf_version = "2.0.0";
 
   /** An array of authentication objects
   * @var array
@@ -89,7 +89,7 @@ class WA extends Smarty
     $this->debugging              = $config['debugging'];
     $this->caching                = $config['caching'];
 
-    // Material loaded from config
+    // Other material loaded from config
     foreach($config as $key => $value)
     {
       $this->$key = $value;
@@ -150,7 +150,7 @@ class WA extends Smarty
       }
     }
 
-    //  Work out the full URL incase rewriting is used
+    //  Work out the full URL in case rewriting is used
     $this->url = explode( "/", $_SERVER['REQUEST_URI']);
 
     // Prepare database connections
@@ -193,7 +193,7 @@ class WA extends Smarty
     }
     if(!$this->unattended && get_magic_quotes_gpc())
     {
-      $this->halt("WAF: Requires PHP  magic quotes off for GPC");
+      $this->halt("WAF: Requires PHP magic quotes off for GPC");
     }
     if($this->waf_debug)
     {
@@ -236,6 +236,19 @@ class WA extends Smarty
   }
 
   /**
+  * Set the log identifier string on all logs
+  *
+  * @param string the new log ident string
+  */
+  function set_log_ident($ident)
+  {
+    foreach($this->logs as $log)
+    {
+      $log->setIdent($ident);
+    }
+  }
+
+  /**
   * Change the default log file
   *
   * @param string $ident the new log file to use by default
@@ -244,7 +257,6 @@ class WA extends Smarty
   {
     $this->default_log = $ident;
   }
-
 
   /**
   * Log a message
@@ -263,17 +275,13 @@ class WA extends Smarty
   }
 
   /**
-  * Set the log identifier string on all logs
-  *
-  * @param string the new log ident string
+  * Logs important possible security intrusions, including the IP address of the remote end
   */
-  function set_log_ident($ident)
+  function security_log($message)
   {
-    foreach($this->logs as $log)
-    {
-      $log->setIdent($ident);
-    }
+    $this->log($message . " [IP:" . $_SERVER['REMOTE_ADDR'] . "]", PEAR_LOG_ALERT, "security");
   }
+
 
   /* Database connection functions */
 
@@ -302,7 +310,7 @@ class WA extends Smarty
   }
 
 
-  /* Authentication functions */
+  /* Authentication functions and user handling */
 
   /**
   * Adds an authentication mechanism to the WAF
@@ -390,10 +398,16 @@ class WA extends Smarty
   }
 
 
+	/**
+	* determines if a user is logged in already
+	* 
+	* @return boolean depending on whether the user is logged in
+	*/
   function exists_user()
   {
     return(isset($_SESSION['waf']['user']));
   }
+
 
   /** Attempts to verify the user against all authentication mechanisms in turn
   *
@@ -445,7 +459,6 @@ class WA extends Smarty
       sleep(5); // slow down dictionary assaults
 
     return (FALSE);
-
   }
 
 
@@ -460,47 +473,68 @@ class WA extends Smarty
     $this->set_log_ident("");
   }
 
+	/* User input and persistence */
 
   /**
-  * A function to halt execution
+  * This method returns user input from a GET or POST or the SESSION
   *
-  * Often, the function will attempt to look up a full, potentially localised
-  * message from the language files if $message takes the form foo:bar:etc
-  * and tries to call any user defined error function. It falls back to a
-  * simple die.
+  * The method always returns GET and POST values over SESSION stored values, and rewrites the SESSION stored 
+  * value in this case
   *
-  * @todo die gracefully here... and possibly terminate the page draw in the application if possible
+  * @param string $name The name of the variable to return
+  * @param bool $session A flag to indicate if input should be returned from session and persisted in session
+  *
   */
-  function halt($message="")
+  function request($name, $session = false)
   {
-    $function = $this->app_error_function;
-
-    if(!strlen($function) || !function_exists($function))
+    if (key_exists($name, $_REQUEST) || key_exists($name, $_SESSION)) 
     {
-      die($message);
+      if ($session) 
+      {
+        if (!is_array($_REQUEST[$name]))
+        {
+          if (isset($_REQUEST[$name])) 
+          {
+            $_SESSION[$name] = $_REQUEST[$name];
+            return($_REQUEST[$name]);
+          }
+          else
+          {
+            return $_SESSION[$name];
+          }
+        }
+        else 
+        {
+          return $_REQUEST[$name];
+        }
+      }
+      else
+      {
+        if (!is_array($_REQUEST[$name])) 
+        {
+          if (isset($_REQUEST[$name]))
+          {
+            return($_REQUEST[$name]);
+          }
+          else
+          {
+            return "";
+          }
+        }
+        else
+        {
+          return $_REQUEST[$name];
+        }
+      }
     }
-
-    if(preg_match("/([a-z0-9_-]+:)+([a-z0-9_-]+)/i", $message))
+    else
     {
-      if (file_exists($this->config_dir."lang_".$this->language.".conf"))
-        $this->config_load("lang_".$this->language.".conf", $message);
-      if (file_exists($this->config_dir."local_".$this->language.".conf"))
-        $this->config_load("local_".$this->language.".conf", $message);
+      return "";
     }
-    $this->assign("error_message", $message);
-    $function($this);
-    die();
   }
+	
 
-
-  /**
-  * Logs important possible security intrusions, including the IP address of the remote end
-  */
-  function security_log($message)
-  {
-    $this->log($message . " [IP:" . $_SERVER['REMOTE_ADDR'] . "]", PEAR_LOG_ALERT, "security");
-  }
-
+	/* Navigation functions, these determine and direct flow control */
 
   /**
   * returns the section in use
@@ -595,6 +629,7 @@ class WA extends Smarty
     }
   }
 
+
   /**
   * Executes a specific function dependant upon URL parameters
   *
@@ -639,63 +674,7 @@ class WA extends Smarty
     }
   }
 
-  /**
-  * This method returns user input from a GET or POST or the SESSION
-  *
-  * The method always returns GET and POST values over SESSION stored values, and rewrites the SESSION stored 
-  * value in this case
-  *
-  * @param string $name The name of the variable to return
-  * @param bool $session A flag to indicate if input should be returned from session and persisted in session
-  *
-  */
-  function request($name, $session = false)
-  {
-    if (key_exists($name, $_REQUEST) || key_exists($name, $_SESSION)) 
-    {
-      if ($session) 
-      {
-        if (!is_array($_REQUEST[$name]))
-        {
-          if (isset($_REQUEST[$name])) 
-          {
-            $_SESSION[$name] = $_REQUEST[$name];
-            return($_REQUEST[$name]);
-          }
-          else
-          {
-            return $_SESSION[$name];
-          }
-        }
-        else 
-        {
-          return $_REQUEST[$name];
-        }
-      }
-      else
-      {
-        if (!is_array($_REQUEST[$name])) 
-        {
-          if (isset($_REQUEST[$name]))
-          {
-            return($_REQUEST[$name]);
-          }
-          else
-          {
-            return "";
-          }
-        }
-        else
-        {
-          return $_REQUEST[$name];
-        }
-      }
-    }
-    else
-    {
-      return "";
-    }
-  }
+
 
   /**
   * @todo Gordon, do we need this function as well as the one above?
@@ -724,33 +703,36 @@ class WA extends Smarty
   }
 
   /**
-  * assigns numerous variables from an array to the smarty object
+  * A function to halt execution
   *
-  * this loops through an array and assigns the values to the WA object, using the key as the 
-  * variable name and the value is the array element value
+  * Often, the function will attempt to look up a full, potentially localised
+  * message from the language files if $message takes the form foo:bar:etc
+  * and tries to call any user defined error function. It falls back to a
+  * simple die.
   *
-  * @param array the array to decompose and add to the smarty object
+  * @todo die gracefully here... and possibly terminate the page draw in the application if possible
   */
-  function inject($array_var)
+  function halt($message="")
   {
-    $keys = array_keys($array_var);
+    $function = $this->app_error_function;
 
-    foreach ($keys as $key)
+    if(!strlen($function) || !function_exists($function))
     {
-      $this->assign("$key", $array_var[$key]);
+      die($message);
     }
+
+    if(preg_match("/([a-z0-9_-]+:)+([a-z0-9_-]+)/i", $message))
+    {
+      if (file_exists($this->config_dir."lang_".$this->language.".conf"))
+        $this->config_load("lang_".$this->language.".conf", $message);
+      if (file_exists($this->config_dir."local_".$this->language.".conf"))
+        $this->config_load("local_".$this->language.".conf", $message);
+    }
+    $this->assign("error_message", $message);
+    $function($this);
+    die();
   }
 
-  function inject_object($object, $array_var)
-  {
-    $obj = new $object;
-    $keys = array_keys($array_var);
-    foreach ($keys as $key)
-    {
-      $obj->$key = $array_var[$key];
-    }
-    $this->assign("object", $obj);
-  }
 
   /**
   * Display has been extended to load the default smarty configuration files
@@ -771,6 +753,534 @@ class WA extends Smarty
     }
     parent::display($template);
   }
+	
+	/* Database object manipulation functions */
+	
+	/**
+	* Assigns a page and objects array to a template and passes the 'list' template
+	* to the display method. 
+	* 
+	* This table creates a table view of a set of objects, based on the $list_tpl.
+	* The display method is called on the $waf object and the $config_section and $list_tpl
+	* are passed in.
+	*
+	* @param array $objects The array of objects to be displayed.
+	* @param string $config_section The section configuration, used to active the navigational queues.
+	* @param string $list_tpl The list template to use (default 'list.tpl').
+	*
+	* @uses WA::request()
+	*
+	*/
+	function generate_table($objects, $config_section, $list_tpl='') 
+	{
+		// Default to framework list template
+		if(empty($list_tpl)) $list_tpl = $this->uuwaf_dir . "templates/list.tpl";
+
+		$page = WA::request("page", true);
+		
+		$pages = array();
+		$this->assign("page", $page);
+		$this->assign("objects", $objects);
+
+		$this->display("main.tpl", $config_section, $list_tpl);
+	}
+
+	/**
+	* Provides a list view of objects with various actions to act upon them.
+	*
+	* @param string $class_name the class the object belongs to
+	* @param array $action_links the action links that should be displayed at the top for the whole page
+	* @param array $actions the actions that are shown for each individual item
+	* @param string $get_all_method the function to get all the objects, defaults to get_all()
+	* @param array $get_all_parameter an associative array of parameters to the get_all_method
+	* @param string $config_section the config section to load strings for the template from
+	* @param string $list_tpl the list template to be used to render the user display, defaults to the internal framework one
+	* @param string $field_def_param an optional array of field defs that override the default for the class
+	*
+	* @uses generate_table
+	* 
+	*/
+	function manage_objects($class_name, $action_links, $actions, $get_all_method, $get_all_parameter='', $config_section, $list_tpl='', $field_def_param=null)
+	{
+		// Get the objects and the number of them
+		$object = str_replace(" ", "_", ucwords($object_name));
+		require_once("model/".$object.".class.php");
+		$instance = new $object;
+		$object_num = $instance->count($get_all_parameter[0]);
+
+		if (is_array($get_all_parameter))
+		{
+			$objects = call_user_func_array(array($object, $get_all_method), $get_all_parameter);
+		}
+		else
+		{
+			$objects = call_user_func(array($object, $get_all_method), $get_all_parameter);
+		}
+
+		// Make various assignments to Smarty
+		$this->assign("action_links", $action_links);
+		$this->assign("headings", $instance->get_field_defs($field_def_param));
+		$this->assign("actions", $actions);
+		$this->assign("object_num", $object_num);
+
+		// Finally call the function which generates the table
+		$this->generate_table($objects, $config_section, $list_tpl);
+	}
+
+
+	/**
+	* View an object, normally using a template that presents a read-only view.
+	* 
+	* The object will be found using the explicit parameters and the value of the
+	* $id variable in the $_REQUEST super global.
+	*
+	* @param string $class_name the name of the class the object belongs to
+	* @param array $action_links an array of action buttons to display with the object
+	* @param array $hidden_values an array of key / value pairs that will be used in the display form as hidden variables
+	* @param string $config_section a section from the config from which to read values for display in the template
+	* @param string $manage_tpl if defined, a custom template to use, otherwise the framework default will be used
+	* 
+	* @todo do hidden values really make sense for this function? CT.
+	*/
+	function view_object($class_name, $action_links, $hidden_values, $config_section, $manage_tpl='')
+	{
+		// Default to framework manage template
+		if(empty($manage_tpl)) $manage_tpl = $this->uuwaf_dir . "templates/manage.tpl";
+
+		// Load the object
+    $object = str_replace(" ", "_", ucwords($class_name));
+    require_once("model/".$object.".class.php");
+    $instance = new $object;
+    $id = WA::request("id");
+    $object = $instance->load_by_id($id, true);
+		
+		// Make various assignments to Smarty
+    $this->assign("action_button", $action_button);
+    $this->assign("action_links", $action_links);
+    $this->assign("mode", "remove");
+    $this->assign("object", $object);
+    $this->assign("headings", $instance->get_field_defs());
+    $this->assign("hidden_values", $hidden_values);
+		
+		// Get the core manage content and send it to the master template
+    $content = $waf->fetch($manage_tpl);
+    $this->assign("content", $content);
+    $this->display("main.tpl", $config_section, $manage_tpl);
+  }
+
+
+	/**
+	* Provides a user interface to add an object to the database.
+	*
+	* @param string $class_name the name of the class the object belongs to
+	* @param string $action_button The action button that should be displayed.
+	* @param array $action_links The action links that should be displayed.
+	* @param array $hidden_values Hidden values required for the form to work correctly
+	* @param string $config_section The config section to get the page title and tag line from.
+	* @param string $manage_tpl The manage template to be used to render the form on the user display.
+	* @param array $additional_fields Optional field defs to merge in with existing ones
+	* @param string $field_def_param Used to fine tune the field defs returned by the object
+	*
+	*/
+	function add_object($class_name, $action_button, $action_links, $hidden_values, $config_section, $manage_tpl='', $additional_fields='', $field_def_param=null)
+	{
+		// Default to framework manage template
+		if(empty($manage_tpl)) $manage_tpl = $this->uuwaf_dir . "templates/manage.tpl";
+
+		// Get all the fields and their properties to create such an object
+		$object = str_replace(" ", "_", ucwords($class_name));
+		require_once("model/".$object_name.".class.php");
+		$instance = new $object;
+		$headings = $instance->get_field_defs($field_def_param);
+		if (is_array($additional_fields)) $headings = array_merge($headings, $additional_fields);
+
+		// check for any lookups and populate the required smarty objects as needed
+		assign_lookups($waf, $instance);
+
+		// Make various assignments to Smarty
+		$this->assign("action_button", $action_button);
+		$this->assign("action_links", $action_links);
+		$this->assign("mode", "add");
+		$this->assign("object", $instance);
+		$this->assign("headings", $headings);
+		$this->assign("hidden_values", $hidden_values);
+		
+		// Get the core manage content and send it to the master template
+		$content = $waf->fetch($manage_tpl);
+		$this->assign("content", $content);
+		$this->display("main.tpl", $config_section, $manage_tpl);
+
+	}
+
+	/**
+	* Process the addition of an object.
+	* 
+	* Normally this relies on a previous add_object call setting up the appropriate
+	* user input.
+	*
+	* @param string $class_name the name of the class the object belongs to
+	* @param string $goto the header location to go to after the insertion.
+	* @param string $goto_error the function to call if an error occurs.
+	*
+	* @see WA::add_object()
+	* @todo URGENT update notification system
+	* @todo URGENT update header system to be more generic
+	*/
+	function add_object_do($class_name, $goto, $goto_error='')
+	{
+		global $config;
+
+		// Obtain the user input and validation
+		$object = str_replace(" ", "_", ucwords($class_name));
+		require_once("model/".$object.".class.php");
+		$obj = new $object;
+		$nvp_array = call_user_func(array($object, "request_field_values"), False);  // false means no id is requested
+		$validation_messages = $obj->_validate($nvp_array);
+
+		// Did errors
+		if (count($validation_messages) == 0)
+		{
+			$response = $obj->insert($nvp_array);
+
+			if (!is_numeric($response)) 
+			{
+				$_SESSION['waf']['error_message'] = $response;
+			}
+			else
+			{
+				// Log insert if possible / sensible
+				$id = $response;
+				if(method_exists($obj, "get_name")) $human_name = "(" .$obj->get_name($id) .")";
+				$waf->log("new $object_name added $human_name");
+			}
+			header("location: " . $config['opus']['url'] . "?$goto");
+		}
+		else
+		{
+			if ($goto_error == "") $goto_error = "add_".strtolower($object);
+			$waf->assign("nvp_array", $nvp_array);
+			$waf->assign("validation_messages", $validation_messages);
+			$goto_error($waf, $user);
+		}
+	}
+
+	/**
+	 * Edit an object.  This presents an completed form view for the editing of object information.
+	 * It is normally called from the manage object UI view. 
+	 *
+	 *
+	 * @param WA &$waf The web application instance object, pass as reference.
+	 * @param array $user The user array.
+	 * @param string $object_name The object's name.
+	 * @param string $action_button The action button that should be displayed.
+	 * @param array $action_links The action links that should be displayed.
+	 * @param array $hidden_values Hidden values required for the form to work correctly.
+	 * @param string $config_section The config section to get the page title and tag line from.
+	 * @param string $manage_tpl The manage template to be used to render the form on the user display.
+	 * @param array $additional_fields Optional field defs to merge in with existing ones
+	 * @param string $field_def_param Used to fine tune the field defs returned by the object
+	 *
+	 * @uses WA::request()
+	 * 
+	 */
+	function edit_object(&$waf, $user, $object_name, $action_button, $action_links, $hidden_values, $config_section, $manage_tpl='manage.tpl', $additional_fields='', $field_def_param=null)
+	{
+
+		$object = str_replace(" ", "_", ucwords($object_name));  
+		require_once("model/".$object.".class.php");
+		$instance = new $object;
+
+		$headings = $instance->get_field_defs($field_def_param);
+		if (is_array($additional_fields)) $headings = array_merge($headings, $additional_fields);
+
+		$id = WA::request("id");
+		$object = call_user_func(array($object, "load_by_id"), $id);
+		$waf->assign("action_button", $action_button);
+		$waf->assign("action_links", $action_links);
+		$waf->assign("mode", "edit");
+		$waf->assign("object", $object);
+		$waf->assign("headings", $headings);
+		// check for lookups and populate the required smarty objects
+		assign_lookups($waf, $instance);
+		$waf->assign("hidden_values", $hidden_values);
+		$content = $waf->fetch($manage_tpl);
+		$waf->assign("content", $content);
+		$waf->display("main.tpl", $config_section, $manage_tpl);
+
+		// Log view
+		if(method_exists($instance, "get_name")) $human_name = "(" .$instance->get_name($id) .")";
+		$waf->log("editing $object_name $human_name");
+	}
+
+	/**
+	 * Process the edit of an object.  
+	 *
+	 *
+	 * @param WA &$waf The web application instance object, pass as reference.
+	 * @param array $user The user array.
+	 * @param string $object_name The object's name.
+	 * @param string $goto The header location to go to after the insertion.
+	 * @param string $goto_error The function to call if an error occurs.
+	 *
+	 * 
+	 */
+	function edit_object_do(&$waf, $user, $object_name, $goto, $goto_error='')
+	{
+		global $config;
+
+		$object = str_replace(" ", "_", ucwords($object_name));
+		require_once("model/".$object.".class.php");
+
+		$obj = new $object;
+		$nvp_array = call_user_func(array($object, "request_field_values"), True);  // false mean no id is requested
+				$validation_messages = $obj->_validate($nvp_array);
+
+		if (count($validation_messages) == 0) {
+			$obj->update($nvp_array);
+			header("location: " . $config['opus']['url'] . "?$goto");
+		}
+		else
+		{
+			if ($goto_error == "") $goto_error = "edit_".strtolower($object);
+			$waf->assign("nvp_array", $nvp_array);
+			$waf->assign("validation_messages", $validation_messages);
+			$goto_error($waf, $user);
+		}
+
+		// Log edit
+		$id = WA::request("id");
+		if(method_exists($instance, "get_name")) $human_name = "(" .$instance->get_name($id) .")";
+		$waf->log("changes made to $object_name $human_name");
+	}
+
+	/**
+	 * Remove an object.  This presents summary view of the object to be removed and confirmation button 
+	 *
+	 *
+	 * @param WA &$waf The web application instance object, pass as reference.
+	 * @param array $user The user array.
+	 * @param string $object_name The object's name.
+	 * @param string $action_button The action button that should be displayed.
+	 * @param array $action_links The action links that should be displayed.
+	 * @param array $hidden_values Hidden values required for the form to work correctly.
+	 * @param string $config_section The config section to get the page title and tag line from.
+	 * @param string $manage_tpl The manage template to be used to render the form on the user display.
+	 *
+	 * @uses WA::request()
+	 * 
+	 */
+	function remove_object(&$waf, &$user, $object_name, $action_button, $action_links, $hidden_values, $config_section, $manage_tpl='manage.tpl',  $additional_fields='', $field_def_param=null)
+	{
+
+		$object = str_replace(" ", "_", ucwords($object_name));
+
+		require_once("model/".$object.".class.php");
+
+		$instance = new $object;
+
+		$headings = $instance->get_field_defs($field_def_param);
+		if (is_array($additional_fields)) $headings = array_merge($headings, $additional_fields);
+
+		$id = WA::request("id");
+		$object = call_user_func_array(array($object, "load_by_id"), array($id, true));
+		$waf->assign("action_button", $action_button);
+		$waf->assign("action_links", $action_links);
+		$waf->assign("mode", "remove");
+		$waf->assign("object", $object);
+		$waf->assign("headings", $headings);
+		$waf->assign("hidden_values", $hidden_values);
+		$content = $waf->fetch($manage_tpl);
+		$waf->assign("content", $content);
+		$waf->display("main.tpl", $config_section, $manage_tpl);
+
+		// Log view
+		if(method_exists($instance, "get_name")) $human_name = "(" .$instance->get_name($id) .")";
+		$waf->log("possibly removing $object_name $human_name");
+	}
+
+	/**
+	 * Process the removal of an object.  
+	 *
+	 *
+	 * @param WA &$waf The web application instance object, pass as reference.
+	 * @param array $user The user array.
+	 * @param string $object_name The object's name.
+	 * @param string $goto The header location to go to after the insertion.
+	 *
+	 * 
+	 */
+	function remove_object_do(&$waf, &$user, $object_name, $goto)
+	{
+		global $config;
+
+		$object = str_replace(" ", "_", ucwords($object_name));
+		require_once("model/".$object.".class.php");
+
+		$nvp_array = call_user_func(array($object, "request_field_values"), True);  // false mean no id is requested
+		call_user_func(array($object, "remove"), $nvp_array[id]);
+
+		// Log view
+		$id = WA::request("id");
+		if(method_exists($instance, "get_name")) $human_name = "(" .$instance->get_name($id) .")";
+		$waf->log("deleting $object_name $human_name");
+
+		header("location: " . $config['opus']['url'] . "?$goto");
+	}
+
+	/**
+	 * This assigns lookup values to for a lookup property to a Smarty variable called '$field_def[var]'.
+	 * The value assigned is an array of ids and field values.
+	 * 
+	 * @param WA &$waf The web application instance object, pass as reference.
+	 * @param object $instance An actual object instance that may contain lookup values.
+	 */
+
+		function assign_lookups(&$waf, $instance) 
+		{
+			foreach ($instance->get_field_defs() as $field_def) 
+			{
+				if ($field_def['type'] == "lookup") 
+				{
+					$lookup_name = str_replace(" ", "_", ucwords($field_def['object']));
+					require_once("model/".$lookup_name.".class.php");
+					$lookup_function = $field_def['lookup_function'];
+					if(empty($lookup_function)) $lookup_function="get_id_and_field";
+					$lookup_array = call_user_func(array($lookup_name, $lookup_function), $field_def['value']);
+					$waf->assign("$field_def[var]", $lookup_array);
+				}
+			}
+		}
+
+		function associate_objects(&$waf, &$user, $object_name, $objects_name, $action_button, $get_all_method, $get_all_parameter="", $config_section, $assign_tpl='assign.tpl') {
+		
+			$object = str_replace(" ", "_", ucwords($object_name));
+
+			require_once("model/".$object.".class.php");
+			
+			$instance = new $object;
+
+			$object_num = call_user_func(array($object, "count"));
+			
+			$waf->assign("action_links", $action_links);
+			$waf->assign("headings", $instance->get_field_defs());
+			$waf->assign("actions", $actions);
+			$waf->assign("object_num", $object_num);
+
+			if (is_array($get_all_parameter)) { 
+				$objects = call_user_func_array(array($object, $get_all_method), $get_all_parameter);
+			} else {
+				$objects = call_user_func(array($object, $get_all_method), $get_all_parameter);
+			}
+
+			generate_table($waf, $objects, $config_section, $assign_tpl);
+		}
+
+	/**
+	* This generates an assign table, a table that can be used to assign one object to a number of
+	* instance of another object, i.e. assign a user to a number of groups.
+	* 
+	* @param WA &$waf The web application instance object, pass as reference.
+	* @param objects $instance An array of object instances.
+	*
+	* @uses WA::request()
+	*/
+
+	function generate_assign_table(&$waf, $objects, $config_section, $assign_tpl='assign.tpl') 
+	{
+		$page = WA::request("page", true);
+
+		$pages = array();
+
+		$waf->assign("page", $page);
+		$waf->assign("objects", $objects);
+
+		$waf->display("main.tpl", $config_section, $list_tpl);
+
+		//    $page = WA::request("page");
+		$pages = array();
+
+		$number_of_objects = count($objects);
+
+		for ($i = 1; $i<=$number_of_objects; $i=$i+ROWS_PER_PAGE) 
+		{
+			$p = (($i-1)/ROWS_PER_PAGE)+1;
+			array_push ($pages, $p);
+		}
+
+		if (count($pages) == 0) $pages = array(1);
+		$waf->assign("page", $page);
+		$waf->assign("pages", $pages);
+		$waf->assign("objects", $objects);
+
+		$object_list = $waf->fetch("assign_list.tpl");
+		$waf->assign("content", $object_list);
+		$waf->display("main.tpl", $config_section, $assign_tpl);
+	}
+
+	function assign_objects_do(&$WA) {
+
+	}
+
+	/**
+	* This validates one field of an object.
+	*
+	* @uses WA::request()
+	* @uses DTO::_validation_response() This is inherited by the $object instance
+	*
+	*/
+	function validate_field() 
+	{
+		$object = WA::request("object");
+		$field = WA::request("field");
+		$value = WA::request("value");
+
+		$lookup_name = str_replace("_", " ", $object);
+		$lookup_name = str_replace(" ", "_", ucwords($lookup_name));
+
+		require_once("model/".$lookup_name.".class.php");
+
+		$obj = new $lookup_name;
+		echo $obj->_validation_response($field, $value);
+	}
+
+	/* Deprecated, possibly unsed functions scheduled for removal */
+
+  /**
+  * assigns numerous variables from an array to the smarty object
+  *
+  * this loops through an array and assigns the values to the WA object, using the key as the 
+  * variable name and the value is the array element value
+  *
+  * @param array the array to decompose and add to the smarty object
+	* @deprecated
+  */
+  function inject($array_var)
+  {
+    $keys = array_keys($array_var);
+
+    foreach ($keys as $key)
+    {
+      $this->assign("$key", $array_var[$key]);
+    }
+  }
+
+	/**
+	* @todo CT Notes this function confirmed not to be used by OPUS/PDS, will
+	* delete soon... make any objections very soon!!!
+	* @deprecated
+	*/
+  function inject_object($object, $array_var)
+  {
+    $obj = new $object;
+    $keys = array_keys($array_var);
+    foreach ($keys as $key)
+    {
+      $obj->$key = $array_var[$key];
+    }
+    $this->assign("object", $obj);
+  }
+
+
 }
 
 ?>
