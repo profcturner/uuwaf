@@ -217,6 +217,10 @@ class WA extends Smarty
     {
       $this->create_log_file('waf_debug', $this->log_level);
     }
+		if($this->log_full_backtrace)
+		{
+			$this->create_log_file('backtrace', $this->log_level);
+		}
   }
 
   /**
@@ -281,6 +285,45 @@ class WA extends Smarty
   {
     $this->log($message . " [IP:" . $_SERVER['REMOTE_ADDR'] . "]", PEAR_LOG_ALERT, "security");
   }
+	
+	/**
+	* Provides a details backtrace in the log files
+	* 
+	* @param string the name of the log file to use, defaults to debug
+	* @param boolean whether to include details like line numbers, default is false
+	*/
+	function log_back_trace($name = 'debug', $full_detail = true)
+	{
+		// Generate the bug trace
+		$backtrace = debug_backtrace();
+		
+		$this->log("Backtrace requested...", PEAR_LOG_ALERT, $name);
+		foreach($backtrace as $item)
+		{
+			$log_line = "Backtrace: " . $item['class'] . "::" . $item['function'];
+			$this->log($log_line, PEAR_LOG_ALERT, $name);
+			if($full_detail)
+			{
+				$log_line = "Backtrace: at " . $item['file'] . ":" . $item['line'];
+				$this->log($log_line, PEAR_LOG_ALERT, $name);
+			}
+		}
+		
+		if($this->log_full_backtrace)
+		{
+			//ob_start();
+			//var_export($backtrace);
+			//$backtrace_export = ob_get_contents();
+    	//ob_end_clean(); 
+			$backtrace_export = var_export($backtrace, true);
+			//echo $backtrace_export; exit;
+			$lines = explode("\n", $backtrace_export);
+			foreach($lines as $line)
+			{
+				$this->log($line, PEAR_LOG_ALERT, "backtrace");
+			}
+		}
+	}
 
 
   /* Database connection functions */
@@ -895,7 +938,7 @@ class WA extends Smarty
 		if (is_array($additional_fields)) $headings = array_merge($headings, $additional_fields);
 
 		// check for any lookups and populate the required smarty objects as needed
-		assign_lookups($waf, $instance);
+		$this->assign_lookups($instance);
 
 		// Make various assignments to Smarty
 		$this->assign("action_button", $action_button);
@@ -968,10 +1011,7 @@ class WA extends Smarty
 	 * Edit an object.  This presents an completed form view for the editing of object information.
 	 * It is normally called from the manage object UI view. 
 	 *
-	 *
-	 * @param WA &$waf The web application instance object, pass as reference.
-	 * @param array $user The user array.
-	 * @param string $object_name The object's name.
+	 * @param string $class_name The name of the class of the object being edited.
 	 * @param string $action_button The action button that should be displayed.
 	 * @param array $action_links The action links that should be displayed.
 	 * @param array $hidden_values Hidden values required for the form to work correctly.
@@ -983,52 +1023,60 @@ class WA extends Smarty
 	 * @uses WA::request()
 	 * 
 	 */
-	function edit_object(&$waf, $user, $object_name, $action_button, $action_links, $hidden_values, $config_section, $manage_tpl='manage.tpl', $additional_fields='', $field_def_param=null)
+	function edit_object($object_name, $action_button, $action_links, $hidden_values, $config_section, $manage_tpl='', $additional_fields='', $field_def_param=null)
 	{
+		// Default to framework manage template
+		if(empty($manage_tpl)) $manage_tpl = $this->uuwaf_dir . "templates/manage.tpl";
 
-		$object = str_replace(" ", "_", ucwords($object_name));  
+		// Get all the fields and their properties to create such an object
+		$object = str_replace(" ", "_", ucwords($class_name));  
 		require_once("model/".$object.".class.php");
 		$instance = new $object;
-
 		$headings = $instance->get_field_defs($field_def_param);
 		if (is_array($additional_fields)) $headings = array_merge($headings, $additional_fields);
 
+		// check for any lookups and populate the required smarty objects as needed
+		$this->assign_lookups($instance);
+
+		// Load the specific object to edit
 		$id = WA::request("id");
 		$object = call_user_func(array($object, "load_by_id"), $id);
-		$waf->assign("action_button", $action_button);
-		$waf->assign("action_links", $action_links);
-		$waf->assign("mode", "edit");
-		$waf->assign("object", $object);
-		$waf->assign("headings", $headings);
-		// check for lookups and populate the required smarty objects
-		assign_lookups($waf, $instance);
-		$waf->assign("hidden_values", $hidden_values);
-		$content = $waf->fetch($manage_tpl);
-		$waf->assign("content", $content);
-		$waf->display("main.tpl", $config_section, $manage_tpl);
 
-		// Log view
-		if(method_exists($instance, "get_name")) $human_name = "(" .$instance->get_name($id) .")";
-		$waf->log("editing $object_name $human_name");
+		// Make various assignments to Smarty
+		$this->assign("action_button", $action_button);
+		$this->assign("action_links", $action_links);
+		$this->assign("mode", "edit");
+		$this->assign("object", $object);
+		$this->assign("headings", $headings);
+		$this->assign("hidden_values", $hidden_values);
+		
+		// Get the core manage content and send it to the master template		
+		$content = $this->fetch($manage_tpl);
+		$this->assign("content", $content);
+		$this->display("main.tpl", $config_section, $manage_tpl);
+
+		// Log the edit, if there's a sensible method that allows that
+		if(method_exists($instance, "get_name"))
+		{
+			$human_name = "(" .$instance->get_name($id) .")";
+		  $waf->log("editing $object_name $human_name");
+		}
 	}
 
 	/**
 	 * Process the edit of an object.  
 	 *
-	 *
-	 * @param WA &$waf The web application instance object, pass as reference.
-	 * @param array $user The user array.
-	 * @param string $object_name The object's name.
+	 * @param string $class_name The name of the class the object belongs to.
 	 * @param string $goto The header location to go to after the insertion.
 	 * @param string $goto_error The function to call if an error occurs.
 	 *
 	 * 
 	 */
-	function edit_object_do(&$waf, $user, $object_name, $goto, $goto_error='')
+	function edit_object_do($class_name, $goto, $goto_error='')
 	{
 		global $config;
 
-		$object = str_replace(" ", "_", ucwords($object_name));
+		$object = str_replace(" ", "_", ucwords($class_name));
 		require_once("model/".$object.".class.php");
 
 		$obj = new $object;
@@ -1057,9 +1105,7 @@ class WA extends Smarty
 	 * Remove an object.  This presents summary view of the object to be removed and confirmation button 
 	 *
 	 *
-	 * @param WA &$waf The web application instance object, pass as reference.
-	 * @param array $user The user array.
-	 * @param string $object_name The object's name.
+	 * @param string $class_name The name of the class the object belongs to.
 	 * @param string $action_button The action button that should be displayed.
 	 * @param array $action_links The action links that should be displayed.
 	 * @param array $hidden_values Hidden values required for the form to work correctly.
@@ -1069,47 +1115,50 @@ class WA extends Smarty
 	 * @uses WA::request()
 	 * 
 	 */
-	function remove_object(&$waf, &$user, $object_name, $action_button, $action_links, $hidden_values, $config_section, $manage_tpl='manage.tpl',  $additional_fields='', $field_def_param=null)
+	function remove_object($class_name, $action_button, $action_links, $hidden_values, $config_section, $manage_tpl='',  $additional_fields='', $field_def_param=null)
 	{
+		// Default to framework manage template
+		if(empty($manage_tpl)) $manage_tpl = $this->uuwaf_dir . "templates/manage.tpl";
 
-		$object = str_replace(" ", "_", ucwords($object_name));
-
+		// Get all the fields and their properties to create such an object
+		$object = str_replace(" ", "_", ucwords($class_name));
 		require_once("model/".$object.".class.php");
-
 		$instance = new $object;
-
 		$headings = $instance->get_field_defs($field_def_param);
 		if (is_array($additional_fields)) $headings = array_merge($headings, $additional_fields);
 
+		// Get the specific object to remove
 		$id = WA::request("id");
 		$object = call_user_func_array(array($object, "load_by_id"), array($id, true));
-		$waf->assign("action_button", $action_button);
-		$waf->assign("action_links", $action_links);
-		$waf->assign("mode", "remove");
-		$waf->assign("object", $object);
-		$waf->assign("headings", $headings);
-		$waf->assign("hidden_values", $hidden_values);
-		$content = $waf->fetch($manage_tpl);
-		$waf->assign("content", $content);
-		$waf->display("main.tpl", $config_section, $manage_tpl);
+
+		// Make various assignments to Smarty		
+		$this->assign("action_button", $action_button);
+		$this->assign("action_links", $action_links);
+		$this->assign("mode", "remove");
+		$this->assign("object", $object);
+		$this->assign("headings", $headings);
+		$this->assign("hidden_values", $hidden_values);
+
+		// Get the core manage content and send it to the master template		
+		$content = $this->fetch($manage_tpl);
+		$this->assign("content", $content);
+		$this->display("main.tpl", $config_section, $manage_tpl);
 
 		// Log view
 		if(method_exists($instance, "get_name")) $human_name = "(" .$instance->get_name($id) .")";
-		$waf->log("possibly removing $object_name $human_name");
+		$this->log("possibly removing $object_name $human_name");
 	}
 
 	/**
 	 * Process the removal of an object.  
 	 *
 	 *
-	 * @param WA &$waf The web application instance object, pass as reference.
-	 * @param array $user The user array.
 	 * @param string $object_name The object's name.
 	 * @param string $goto The header location to go to after the insertion.
 	 *
 	 * 
 	 */
-	function remove_object_do(&$waf, &$user, $object_name, $goto)
+	function remove_object_do($class_name, $goto)
 	{
 		global $config;
 
@@ -1135,45 +1184,53 @@ class WA extends Smarty
 	 * @param object $instance An actual object instance that may contain lookup values.
 	 */
 
-		function assign_lookups(&$waf, $instance) 
+	function assign_lookups($instance) 
+	{
+		foreach ($instance->get_field_defs() as $field_def) 
 		{
-			foreach ($instance->get_field_defs() as $field_def) 
+			if ($field_def['type'] == "lookup") 
 			{
-				if ($field_def['type'] == "lookup") 
-				{
-					$lookup_name = str_replace(" ", "_", ucwords($field_def['object']));
-					require_once("model/".$lookup_name.".class.php");
-					$lookup_function = $field_def['lookup_function'];
-					if(empty($lookup_function)) $lookup_function="get_id_and_field";
-					$lookup_array = call_user_func(array($lookup_name, $lookup_function), $field_def['value']);
-					$waf->assign("$field_def[var]", $lookup_array);
-				}
+				$lookup_name = str_replace(" ", "_", ucwords($field_def['object']));
+				require_once("model/".$lookup_name.".class.php");
+				$lookup_function = $field_def['lookup_function'];
+				if(empty($lookup_function)) $lookup_function="get_id_and_field";
+				$lookup_array = call_user_func(array($lookup_name, $lookup_function), $field_def['value']);
+				$this->assign("$field_def[var]", $lookup_array);
 			}
 		}
+	}
 
-		function associate_objects(&$waf, &$user, $object_name, $objects_name, $action_button, $get_all_method, $get_all_parameter="", $config_section, $assign_tpl='assign.tpl') {
-		
-			$object = str_replace(" ", "_", ucwords($object_name));
 
-			require_once("model/".$object.".class.php");
-			
-			$instance = new $object;
+	/**
+	* @todo Is this used? The associated do function is empty
+	*/
+	function associate_objects($class_name, $objects_name, $action_button, $get_all_method, $get_all_parameter="", $config_section, $assign_tpl='')
+	{	
+		// Get an object to do field lookups and counts
+		$object = str_replace(" ", "_", ucwords($class_name));
+		require_once("model/".$object.".class.php");
+		$instance = new $object;
 
-			$object_num = call_user_func(array($object, "count"));
-			
-			$waf->assign("action_links", $action_links);
-			$waf->assign("headings", $instance->get_field_defs());
-			$waf->assign("actions", $actions);
-			$waf->assign("object_num", $object_num);
+		// Get some data and assign it to Smarty
+		$object_num = call_user_func(array($object, "count"));
+		$waf->assign("action_links", $action_links);
+		$waf->assign("headings", $instance->get_field_defs());
+		$waf->assign("actions", $actions);
+		$waf->assign("object_num", $object_num);
 
-			if (is_array($get_all_parameter)) { 
-				$objects = call_user_func_array(array($object, $get_all_method), $get_all_parameter);
-			} else {
-				$objects = call_user_func(array($object, $get_all_method), $get_all_parameter);
-			}
-
-			generate_table($waf, $objects, $config_section, $assign_tpl);
+		// Get all the objects
+		if (is_array($get_all_parameter))
+		{ 
+			$objects = call_user_func_array(array($object, $get_all_method), $get_all_parameter);
 		}
+		else
+		{
+			$objects = call_user_func(array($object, $get_all_method), $get_all_parameter);
+		}
+
+		// And now generate the table
+		$waf->generate_table($objects, $config_section, $assign_tpl);
+	}
 
 	/**
 	* This generates an assign table, a table that can be used to assign one object to a number of
@@ -1183,18 +1240,21 @@ class WA extends Smarty
 	* @param objects $instance An array of object instances.
 	*
 	* @uses WA::request()
+	* @todo Is this used? The associated do function is empty
 	*/
-
-	function generate_assign_table(&$waf, $objects, $config_section, $assign_tpl='assign.tpl') 
+	function generate_assign_table($objects, $config_section, $assign_tpl='') 
 	{
+		// Default to framework assign template
+		if(empty($assign_tpl)) $assign_tpl = $this->uuwaf_dir . "templates/assign.tpl";
+		
 		$page = WA::request("page", true);
 
 		$pages = array();
 
-		$waf->assign("page", $page);
-		$waf->assign("objects", $objects);
+		$this->assign("page", $page);
+		$this->assign("objects", $objects);
 
-		$waf->display("main.tpl", $config_section, $list_tpl);
+		$this->display("main.tpl", $config_section, $list_tpl);
 
 		//    $page = WA::request("page");
 		$pages = array();
@@ -1208,16 +1268,17 @@ class WA extends Smarty
 		}
 
 		if (count($pages) == 0) $pages = array(1);
-		$waf->assign("page", $page);
-		$waf->assign("pages", $pages);
-		$waf->assign("objects", $objects);
+		$this->assign("page", $page);
+		$this->assign("pages", $pages);
+		$this->assign("objects", $objects);
 
 		$object_list = $waf->fetch("assign_list.tpl");
-		$waf->assign("content", $object_list);
-		$waf->display("main.tpl", $config_section, $assign_tpl);
+		$this->assign("content", $object_list);
+		$this->display("main.tpl", $config_section, $assign_tpl);
 	}
 
-	function assign_objects_do(&$WA) {
+	function assign_objects_do(&$WA)
+	{
 
 	}
 
