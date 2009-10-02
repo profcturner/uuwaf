@@ -1,6 +1,9 @@
 <div id="table_list">
 {if !$ROWS_PER_PAGE}
-{assign var='ROWS_PER_PAGE' value=$config.opus.rows_per_page}
+{assign var='ROWS_PER_PAGE' value=$config.waf.rows_per_page}
+{/if}
+{if !$ROWS_PER_PAGE}
+{assign var='ROWS_PER_PAGE' value=20}
 {/if}
 {if !$nopage}
 {if $object_num > $ROWS_PER_PAGE}

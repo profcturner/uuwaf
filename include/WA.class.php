@@ -846,7 +846,7 @@ class WA extends Smarty
 	function manage_objects($class_name, $action_links, $actions, $get_all_method, $get_all_parameter='', $config_section, $list_tpl='', $field_def_param=null)
 	{
 		// Get the objects and the number of them
-		$object = str_replace(" ", "_", ucwords($object_name));
+		$object = str_replace(" ", "_", ucwords($class_name));
 		require_once("model/".$object.".class.php");
 		$instance = new $object;
 		$object_num = $instance->count($get_all_parameter[0]);
@@ -932,7 +932,7 @@ class WA extends Smarty
 
 		// Get all the fields and their properties to create such an object
 		$object = str_replace(" ", "_", ucwords($class_name));
-		require_once("model/".$object_name.".class.php");
+		require_once("model/".$object.".class.php");
 		$instance = new $object;
 		$headings = $instance->get_field_defs($field_def_param);
 		if (is_array($additional_fields)) $headings = array_merge($headings, $additional_fields);
@@ -949,7 +949,7 @@ class WA extends Smarty
 		$this->assign("hidden_values", $hidden_values);
 		
 		// Get the core manage content and send it to the master template
-		$content = $waf->fetch($manage_tpl);
+		$content = $this->fetch($manage_tpl);
 		$this->assign("content", $content);
 		$this->display("main.tpl", $config_section, $manage_tpl);
 
@@ -994,15 +994,15 @@ class WA extends Smarty
 				// Log insert if possible / sensible
 				$id = $response;
 				if(method_exists($obj, "get_name")) $human_name = "(" .$obj->get_name($id) .")";
-				$waf->log("new $object_name added $human_name");
+				$this->log("new $object_name added $human_name");
 			}
 			header("location: " . $config['opus']['url'] . "?$goto");
 		}
 		else
 		{
 			if ($goto_error == "") $goto_error = "add_".strtolower($object);
-			$waf->assign("nvp_array", $nvp_array);
-			$waf->assign("validation_messages", $validation_messages);
+			$this->assign("nvp_array", $nvp_array);
+			$this->assign("validation_messages", $validation_messages);
 			$goto_error($waf, $user);
 		}
 	}
@@ -1023,7 +1023,7 @@ class WA extends Smarty
 	 * @uses WA::request()
 	 * 
 	 */
-	function edit_object($object_name, $action_button, $action_links, $hidden_values, $config_section, $manage_tpl='', $additional_fields='', $field_def_param=null)
+	function edit_object($class_name, $action_button, $action_links, $hidden_values, $config_section, $manage_tpl='', $additional_fields='', $field_def_param=null)
 	{
 		// Default to framework manage template
 		if(empty($manage_tpl)) $manage_tpl = $this->uuwaf_dir . "templates/manage.tpl";
@@ -1059,7 +1059,7 @@ class WA extends Smarty
 		if(method_exists($instance, "get_name"))
 		{
 			$human_name = "(" .$instance->get_name($id) .")";
-		  $waf->log("editing $object_name $human_name");
+		  $this->log("editing $object_name $human_name");
 		}
 	}
 
@@ -1090,15 +1090,15 @@ class WA extends Smarty
 		else
 		{
 			if ($goto_error == "") $goto_error = "edit_".strtolower($object);
-			$waf->assign("nvp_array", $nvp_array);
-			$waf->assign("validation_messages", $validation_messages);
+			$this->assign("nvp_array", $nvp_array);
+			$this->assign("validation_messages", $validation_messages);
 			$goto_error($waf, $user);
 		}
 
 		// Log edit
 		$id = WA::request("id");
 		if(method_exists($instance, "get_name")) $human_name = "(" .$instance->get_name($id) .")";
-		$waf->log("changes made to $object_name $human_name");
+		$this->log("changes made to $object_name $human_name");
 	}
 
 	/**
@@ -1162,7 +1162,7 @@ class WA extends Smarty
 	{
 		global $config;
 
-		$object = str_replace(" ", "_", ucwords($object_name));
+		$object = str_replace(" ", "_", ucwords($class_name));
 		require_once("model/".$object.".class.php");
 
 		$nvp_array = call_user_func(array($object, "request_field_values"), True);  // false mean no id is requested
@@ -1171,7 +1171,7 @@ class WA extends Smarty
 		// Log view
 		$id = WA::request("id");
 		if(method_exists($instance, "get_name")) $human_name = "(" .$instance->get_name($id) .")";
-		$waf->log("deleting $object_name $human_name");
+		$this->log("deleting $object_name $human_name");
 
 		header("location: " . $config['opus']['url'] . "?$goto");
 	}
