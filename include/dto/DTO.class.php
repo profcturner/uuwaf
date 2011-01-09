@@ -929,13 +929,13 @@ class DTO
         }
         break;
       case "email" :
-        if (strlen($value) > 0 and !ereg("^[^@ ]+@[^@ ]+\.[^@ \.]+$", $value))
+        if (strlen($value) > 0 and !preg_match("/^[^@ ]+@[^@ ]+\.[^@ \.]+$/", $value))
         {
           $valid = "Email is invalid.";
         }
         break;
       case "postcode" :
-        if (!eregi('^[A-Z]{1,2}[0-9]{1,2}[[:space:]][0-9]{1}[A-Z]{2}$', $value) and strlen($value) > 0)
+        if (!preg_match('/^[A-Z]{1,2}[0-9]{1,2}[[:space:]][0-9]{1}[A-Z]{2}$/', $value) and strlen($value) > 0)
         {
           $valid = "Postcode is invalid.";
         }
@@ -947,25 +947,34 @@ class DTO
         }
         break;
       case "url" :
-        if (strlen($value) > 0 and !eregi("^(((ht|f)tp(s?))\:\/\/)?(www.|[a-zA-Z\-].)[a-zA-Z0-9\-\.]+\.([a-zA-Z]+)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\;\?\'\\\+&%\$#\=~_\-]+))*$", $value))
+        // A trivial modification of regexp from splattermania at freenet dot de 01-Oct-2009 12:01
+        // from php.net preg_match manual page
+        $regexp = "((https?|ftp)\:\/\/)"; // SCHEME
+				$regexp .= "([a-z0-9+!*(),;?&=\$_.-]+(\:[a-z0-9+!*(),;?&=\$_.-]+)?@)?"; // User and Pass
+				$regexp .= "([a-z0-9-.]*)\.([a-z]{2,3})"; // Host or IP
+				$regexp .= "(\:[0-9]{2,5})?"; // Port
+				$regexp .= "(\/([a-z0-9+\$_-]\.?)+)*\/?"; // Path
+				$regexp .= "(\?[a-z+&\$_.-][a-z0-9;:@&%=+\/\$_.-]*)?"; // GET Query
+				$regexp .= "(#[a-z_.-][a-z0-9+\$_.-]*)?"; // Anchor 
+        if (strlen($value) > 0 and !preg_match("/^$regexp$/", $value))
         {
           $valid = "URL is invalid.";
         }
         break;
       case "currency" :
-        if (strlen($value) > 0 and !eregi("^[0-9]*[.]*[0-9]{0,2}$", $value))
+        if (strlen($value) > 0 and !preg_match("/^[0-9]*[.]*[0-9]{0,2}$/", $value))
         {
           $valid = "Currency is not valid.";
         }
         break;
       case "date" :
-        if (strlen($value) > 0 and !ereg("(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[012])-([0-9]{4})", $value))
+        if (strlen($value) > 0 and !preg_match("/(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[012])-([0-9]{4})/", $value))
         {
           $valid = "Date is invalid.";
         }
         break;
       case "isodate" :
-        if (strlen($value) > 0 and !ereg("([0-9]{4})-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])", $value))
+        if (strlen($value) > 0 and !preg_match("/([0-9]{4})-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])/", $value))
         {
           $valid = "Date is invalid.";
         }

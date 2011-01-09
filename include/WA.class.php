@@ -906,7 +906,7 @@ class WA extends Smarty
     $this->assign("hidden_values", $hidden_values);
 		
 		// Get the core manage content and send it to the master template
-    $content = $waf->fetch($manage_tpl);
+    $content = $this->fetch($manage_tpl);
     $this->assign("content", $content);
     $this->display("main.tpl", $config_section, $manage_tpl);
   }
@@ -994,7 +994,7 @@ class WA extends Smarty
 				// Log insert if possible / sensible
 				$id = $response;
 				if(method_exists($obj, "get_name")) $human_name = "(" .$obj->get_name($id) .")";
-				$this->log("new $object_name added $human_name");
+				$this->log("new $class_name added $human_name");
 			}
 			header("location: " . $config['opus']['url'] . "?$goto");
 		}
@@ -1003,7 +1003,7 @@ class WA extends Smarty
 			if ($goto_error == "") $goto_error = "add_".strtolower($object);
 			$this->assign("nvp_array", $nvp_array);
 			$this->assign("validation_messages", $validation_messages);
-			$goto_error($waf, $user);
+			$goto_error($this);
 		}
 	}
 
@@ -1092,13 +1092,13 @@ class WA extends Smarty
 			if ($goto_error == "") $goto_error = "edit_".strtolower($object);
 			$this->assign("nvp_array", $nvp_array);
 			$this->assign("validation_messages", $validation_messages);
-			$goto_error($waf, $user);
+			$goto_error($this);
 		}
 
 		// Log edit
 		$id = WA::request("id");
 		if(method_exists($instance, "get_name")) $human_name = "(" .$instance->get_name($id) .")";
-		$this->log("changes made to $object_name $human_name");
+		$this->log("changes made to $class_name $human_name");
 	}
 
 	/**
