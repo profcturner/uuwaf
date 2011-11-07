@@ -39,7 +39,7 @@ require_once('Log.php');
 *
 * @author Colin Turner <c.turner@ulster.ac.uk>
 * @author Gordon Crawford <g.crawford@ulster.ac.uk>
-* @version 1.1
+* @version 2.0
 * @package UUWAF
 * @see UUWAF.class.php
 *
@@ -78,7 +78,7 @@ class WA extends Smarty
 
   function __construct($config)
   {
-    $this->Smarty();
+    parent::__construct();
 
     // Material loaded from config which overrides internals
     $this->template_dir           = $config['templates_dir'];
