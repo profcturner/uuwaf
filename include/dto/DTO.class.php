@@ -48,14 +48,12 @@ class DTO
     }
 
     $connection = $waf->connections[$handle];
-    //if($connection == False)
-    //{
+    if(!is_object($waf->connections[$handle]->con))
+    {
       try
       {
         $waf->connections[$handle]->con = new PDO($connection->dsn, $connection->username, $connection->password, $connection->extra);
-  
         $waf->connections[$handle]->con->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
         $this->_handle = $handle;
       }
       catch (PDOException $e)
@@ -64,11 +62,11 @@ class DTO
         $waf->log("Database connection failure ($error_text)", PEAR_LOG_EMERG, 'panic');
         $waf->halt("error:database:connection_failure");
       }
-    /*}
+    }
     else
-    {
+    { 
       $this->_handle = $handle;
-    }*/
+    }
   }
 
 
