@@ -1,0 +1,22 @@
+#!/bin/sh
+
+set -e
+#set -x
+
+if [ -f /usr/share/debconf/confmodule ]; then
+    . /usr/share/debconf/confmodule
+fi
+if [ -f /usr/share/dbconfig-common/dpkg/postrm.mysql ]; then
+    . /usr/share/dbconfig-common/dpkg/postrm.mysql
+    dbc_go uuwaf-preferences $@
+fi
+
+
+if [ "$1" = "purge" ]; then
+        rm -f /etc/uuwaf-preferences/uuwaf-preferences.php
+        if which ucf >/dev/null 2>&1; then
+                ucf --purge /etc/uuwaf-preferences/uuwaf-preferences.php
+        fi
+fi
+
+#DEBHELPER#

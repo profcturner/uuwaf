@@ -1,0 +1,30 @@
+Source: uuwaf
+Section: web
+Priority: extra
+Maintainer: Colin Turner <c.turner@ulster.ac.uk>
+Build-Depends: debhelper (>= 5)
+Homepage: http://foss.ulster.ac.uk/projects/uuwaf
+Vcs-Browser: http://foss.ulster.ac.uk/cgi-bin/viewvc.cgi/?root=uuwaf
+Vcs-Svn: svn://foss.ulster.ac.uk/svn/uuwaf/trunk
+Standards-Version: 3.8.0
+
+Package: uuwaf
+Architecture: all
+Depends: apache2 | httpd, php5, php5-mysql, smarty, php-log, debconf, mysql-client
+Recommends: mysql-server, php5-ldap
+Description: University of Ulster Web Application Framework
+ uuwaf is a lightweight PHP framework for creating web applications.
+ It handles basic flow control in controllers database connection, data
+ manipulation, log file handling and more. It is built upon the Smarty
+ template system.
+ .
+ This early version is not suitable for standalone usage, but rather it
+ provides shared code used by applications written at the University of
+ Ulster, particularly opus and the pdsystem.
+
+Package: uuwaf-preferences
+Architecture: all
+Depends: uuwaf, dbconfig-common
+Description: University of Ulster Web Application Framework Preference System
+ This provides a common preferences database for software based on the
+ uuwaf package.

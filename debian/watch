@@ -1,0 +1,4 @@
+# format
+version=3
+
+http://foss.ulster.ac.uk/downloads/uuwaf/uuwaf_(.*).orig.tar.gz

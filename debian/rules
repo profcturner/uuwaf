@@ -1,0 +1,56 @@
+#!/usr/bin/make -f
+#
+# Debian rules file for uuwaf
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+configure: configure-stamp
+configure-stamp:
+	dh_testdir
+	touch configure-stamp
+
+build: build-stamp
+
+build-stamp: configure-stamp 
+	dh_testdir
+	touch $@
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp configure-stamp
+	$(MAKE) clean
+	dh_clean 
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k 
+	dh_installdirs
+	dh_install
+
+	# Add here commands to install the package into debian/uuwaf.
+	$(MAKE) install www=$(CURDIR)/debian/uuwaf/var/www prefix=$(CURDIR)/debian/uuwaf/usr etc=$(CURDIR)/debian/uuwaf/etc
+	# Preferences, unfortunately, dh_install can't rename files
+	mv debian/uuwaf-preferences/usr/share/dbconfig-common/data/uuwaf-preferences/install/preferences-schema.sql debian/uuwaf-preferences/usr/share/dbconfig-common/data/uuwaf-preferences/install/mysql
+
+# Build architecture-independent files here.
+binary-indep: build install
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs 
+	dh_installdocs
+	dh_installexamples
+	dh_installdebconf	
+	dh_link
+	dh_strip
+	dh_compress
+	dh_fixperms
+	dh_installdeb
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-indep
+.PHONY: build clean binary-indep binary-arch binary install configure
