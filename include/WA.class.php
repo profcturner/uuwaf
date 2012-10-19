@@ -49,7 +49,7 @@ class WA extends Smarty
   /** The current version of UUWAF
   * @var string
   */
-  var $waf_version = "2.0.0";
+  var $waf_version = "2.1.0";
 
   /** An array of authentication objects
   * @var array
@@ -746,6 +746,53 @@ class WA extends Smarty
   }
 
   /**
+  * Load language prompts from the language.conf or local override files
+  * 
+  * @param $section is either empty for loading global configs, or specifies the section to load
+  * @see T()
+  */
+  function language_load($section)
+  {
+  	if(empty($section))
+  	{
+  	  if (file_exists($this->config_dir."lang_".$this->language.".conf"))
+  			$this->config_load("lang_".$this->language.".conf");
+  	  if (file_exists($this->config_dir."local_".$this->language.".conf"))
+  			$this->config_load("local_".$this->language.".conf");
+  		
+  	}
+  	else
+  	{
+  	  if (file_exists($this->config_dir."lang_".$this->language.".conf"))
+  			$this->config_load("lang_".$this->language.".conf", $section);
+  	  if (file_exists($this->config_dir."local_".$this->language.".conf"))
+  			$this->config_load("local_".$this->language.".conf", $section);
+  	}
+  }
+  
+  /**
+  * Provides simple gettext like support for internationalisation
+  * 
+  * Key words and phrases are added to lang_en.conf (or similar for other languages)
+  * or local_en.conf. These files are loaded with language_load() and then the prompt
+  * name is given where the appropriate translation is returned.
+  * 
+  * @param string the prompt to translate
+  * @return string the translated string
+  */ 
+  function T($prompt)
+  {
+  	$value = $this->get_config_vars($prompt);
+  	if(empty($value))
+  	{
+  	  $this->log("No translation found for [$prompt]", PEAR_LOG_DEBUG, 'debug');
+  		return($prompt); // Nothing but the original prompt 
+  	}
+  	return($value);
+  }
+  
+
+  /**
   * A function to halt execution
   *
   * Often, the function will attempt to look up a full, potentially localised
@@ -764,12 +811,10 @@ class WA extends Smarty
       die($message);
     }
 
+    $this->language_load($message);
     if(preg_match("/([a-z0-9_-]+:)+([a-z0-9_-]+)/i", $message))
     {
-      if (file_exists($this->config_dir."lang_".$this->language.".conf"))
-        $this->config_load("lang_".$this->language.".conf", $message);
-      if (file_exists($this->config_dir."local_".$this->language.".conf"))
-        $this->config_load("local_".$this->language.".conf", $message);
+      $this->language_load($message);
     }
     $this->assign("error_message", $message);
     $function($this);
@@ -784,10 +829,7 @@ class WA extends Smarty
   {
     $parts = explode(":", $section);
     $this->assign("subsection", $parts[2]);
-    if (file_exists($this->config_dir."lang_".$this->language.".conf"))
-      $this->config_load("lang_".$this->language.".conf", $section);
-    if (file_exists($this->config_dir."local_".$this->language.".conf"))
-      $this->config_load("local_".$this->language.".conf", $section);
+    $this->language_load($section);
 
     if (strlen($content_tpl) > 0) 
     {
