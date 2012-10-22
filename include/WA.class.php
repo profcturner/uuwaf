@@ -785,8 +785,10 @@ class WA extends Smarty
   	$value = $this->get_config_vars($prompt);
   	if(empty($value))
   	{
+  		// We have nothing but the original prompt. Report this fact
   	  $this->log("No translation found for [$prompt]", PEAR_LOG_DEBUG, 'debug');
-  		return($prompt); // Nothing but the original prompt 
+  	  // And then return the prompt with any underscores replaced by spaces
+  		return(str_replace('_', ' ', $prompt)); 
   	}
   	return($value);
   }
