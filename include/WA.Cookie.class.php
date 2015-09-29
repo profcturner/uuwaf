@@ -26,7 +26,7 @@ class Cookie
   * @param string the name of the cookie
   * @return an associative array of variables in the cookie
   */
-  function read($cookie_name)
+  public static function read($cookie_name)
   {
     $waf = UUWAF::get_instance();
     $cookie = array();
@@ -60,7 +60,7 @@ class Cookie
   * @param string name of the cookie
   * @return true if cookie exists and is valid (hash and time), false otherwise
   */
-  function verify($cookie)
+  public static function verify($cookie)
   {
     $cookie_array = array();
 
@@ -92,7 +92,7 @@ class Cookie
   * @param string $cookie_host the host to write in the cookie (defaults to waf stored value)
   * @see $cookie_host;
   */
-  function write($cookie_name, $cookie_value, $cookie_expire="", $cookie_path="/", $cookie_host="")
+  public static function write($cookie_name, $cookie_value, $cookie_expire="", $cookie_path="/", $cookie_host="")
   {
     $waf = UUWAF::get_instance();
 
@@ -122,7 +122,7 @@ class Cookie
   * @see $cookie_host;
   * @see Cookie::write()
   */
-  function delete($cookie_name, $cookie_path='/', $cookie_host="")
+  public static function delete($cookie_name, $cookie_path='/', $cookie_host="")
   {
     Cookie::write($cookie_name, "", 0, $cookie_path, $cookie_host);
   }
@@ -134,7 +134,7 @@ class Cookie
   * @return the hash of the material
   * @see $secret;
   */
-  private function hash($value)
+  private static function hash($value)
   {
     $waf = UUWAF::get_instance();
 

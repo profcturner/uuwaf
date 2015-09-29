@@ -11,6 +11,7 @@ require_once("WA.data_connection.class.php");
 
 // 3rd Party includes
 require_once("Smarty.class.php");
+require_once("SmartyBC.class.php");
 
 // The Web Application Framework uses logging from the PEAR Log module
 require_once('Log.php');
@@ -44,7 +45,7 @@ require_once('Log.php');
 * @see UUWAF.class.php
 *
 */
-class WA extends Smarty 
+class WA extends SmartyBC 
 {
   /** The current version of UUWAF
   * @var string
@@ -76,8 +77,17 @@ class WA extends Smarty
   */
   var $default_log;
 
+  /** an array of potential database connections
+  *  @var connections
+  */ 
   var $connections;
+
+  /** the application short title, used in paths and log files
+  *  @var title
+  */ 
   var $title;
+  var $required_waf_version;
+  
   var $uuwaf_dir;
   var $var_dir;
   var $session_dir;
@@ -102,6 +112,12 @@ class WA extends Smarty
   var $validation_image_ok;
   var $validation_image_fail;
   var $app_error_function;
+  
+  var $cookie_host;
+  var $cookie_secret;
+  var $url;
+  var $log_full_backtrace;
+  var $errors;
 
 
   function __construct($config)
@@ -264,7 +280,7 @@ class WA extends Smarty
 
     $extras = array('mode' => $this->log_mode, 'lineFormat' => $this->log_line_format, 'timeFormat' => $this->log_time_format);
 
-    $this->logs[$name] = &Log::singleton('file', $this->log_dir . $name . ".log", $ident, $extras, $level);
+    $this->logs[$name] = Log::singleton('file', $this->log_dir . $name . ".log", $ident, $extras, $level);
   }
 
   /**
@@ -339,12 +355,7 @@ class WA extends Smarty
 		
 		if($this->log_full_backtrace)
 		{
-			//ob_start();
-			//var_export($backtrace);
-			//$backtrace_export = ob_get_contents();
-    	//ob_end_clean(); 
 			$backtrace_export = var_export($backtrace, true);
-			//echo $backtrace_export; exit;
 			$lines = explode("\n", $backtrace_export);
 			foreach($lines as $line)
 			{
@@ -729,9 +740,7 @@ class WA extends Smarty
 
     if (function_exists($function))
     {
-      $test = call_user_func($function, $this);
-      if(!$test) echo "call failed";
-      echo $section . $function;
+      call_user_func($function, $this, $user, $USER_SESSION_NAME);
     }
     elseif (function_exists($default))
     {

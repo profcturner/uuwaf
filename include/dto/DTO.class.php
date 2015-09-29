@@ -13,7 +13,7 @@
 */
 require_once("UUWAF.class.php");
 
-if (!defined(MAX_ROWS_RETURNED)) define("MAX_ROWS_RETURNED", 10000);
+if (!defined("MAX_ROWS_RETURNED")) define("MAX_ROWS_RETURNED", 10000);
 
 /**
 * The Data Transfer Object root class, all dto classes are extended from this.
