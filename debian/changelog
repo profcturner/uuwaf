@@ -1,4 +1,10 @@
-uuwaf (2.0.0-1) unstable; urgency=medium
+uuwaf (2.1.0-1) unstable; urgency=low
+
+  * New upstream version.
+
+ -- Colin Turner <c.turner@ulster.ac.uk>  Tue, 29 Sep 2015 21:13:51 +0100
+
+uuwaf (2.0.0-1) unstable; urgency=low
 
   * New upstream version, fixes, and internationalisation support.
 
