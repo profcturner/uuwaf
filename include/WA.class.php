@@ -40,7 +40,7 @@ require_once('Log.php');
 *
 * @author Colin Turner <c.turner@ulster.ac.uk>
 * @author Gordon Crawford <g.crawford@ulster.ac.uk>
-* @version 2.0
+* @version 2.1
 * @package UUWAF
 * @see UUWAF.class.php
 *
