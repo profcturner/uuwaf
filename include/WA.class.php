@@ -76,6 +76,34 @@ class WA extends Smarty
   */
   var $default_log;
 
+  var $connections;
+  var $title;
+  var $uuwaf_dir;
+  var $var_dir;
+  var $session_dir;
+ 
+  var $auth_dir;
+  var $log_dir;
+  var $log_level;
+  var $panic_on_sql_error;
+  var $log_mode;
+  var $log_line_format;
+  var $log_time_format;
+  var $language;
+  var $sanity_checking;
+  var $unattended;
+  var $rows_per_page;
+  var $gc_probability;
+  var $gc_divisor;
+  var $gc_maxlifetime;
+
+  var $debug_only_on_IP;
+  var $waf_debug;
+  var $validation_image_ok;
+  var $validation_image_fail;
+  var $app_error_function;
+
+
   function __construct($config)
   {
     parent::__construct();
@@ -461,6 +489,7 @@ class WA extends Smarty
   */
   function login_user($username, $password)
   {
+
     $this->set_log_ident("NonAuth:" . $username);
     // Already in the session?
     if($_SESSION['waf']['user']['valid'] == true)
@@ -500,7 +529,6 @@ class WA extends Smarty
 
     if (strlen($username) > 0)
       sleep(5); // slow down dictionary assaults
-
     return (FALSE);
   }
 
@@ -701,7 +729,9 @@ class WA extends Smarty
 
     if (function_exists($function))
     {
-      $function($this, $user, $this->title);
+      $test = call_user_func($function, $this);
+      if(!$test) echo "call failed";
+      echo $section . $function;
     }
     elseif (function_exists($default))
     {
@@ -751,22 +781,22 @@ class WA extends Smarty
   * @param $section is either empty for loading global configs, or specifies the section to load
   * @see T()
   */
-  function language_load($section)
+  function language_load($section="")
   {
   	if(empty($section))
   	{
-  	  if (file_exists($this->config_dir."lang_".$this->language.".conf"))
-  			$this->config_load("lang_".$this->language.".conf");
-  	  if (file_exists($this->config_dir."local_".$this->language.".conf"))
-  			$this->config_load("local_".$this->language.".conf");
+  	  if (file_exists($this->joined_config_dir."lang_".$this->language.".conf"))
+  			$this->configLoad("lang_".$this->language.".conf");
+  	  if (file_exists($this->joined_config_dir."local_".$this->language.".conf"))
+  			$this->configLoad("local_".$this->language.".conf");
   		
   	}
   	else
   	{
-  	  if (file_exists($this->config_dir."lang_".$this->language.".conf"))
-  			$this->config_load("lang_".$this->language.".conf", $section);
-  	  if (file_exists($this->config_dir."local_".$this->language.".conf"))
-  			$this->config_load("local_".$this->language.".conf", $section);
+  	  if (file_exists($this->joined_config_dir."lang_".$this->language.".conf"))
+  			$this->configLoad("lang_".$this->language.".conf", $section);
+  	  if (file_exists($this->joined_config_dir."local_".$this->language.".conf"))
+  			$this->configLoad("local_".$this->language.".conf", $section);
   	}
   }
   
@@ -782,7 +812,7 @@ class WA extends Smarty
   */ 
   function T($prompt)
   {
-  	$value = $this->get_config_vars($prompt);
+  	$value = $this->getConfigVars($prompt);
   	if(empty($value))
   	{
   		// We have nothing but the original prompt. Report this fact
